@@ -295,7 +295,7 @@
                     
                     <div class="action-buttons">
                         <a href="view-reservations.html" class="btn btn-back">← Back to Reservations</a>
-                        <button class="btn btn-cancel" onclick="showCancelModal('${reservation.id}', '${reservation.name.replace(/'/g, "\\'")}')">Cancel Reservation</button>
+                        <button class="btn btn-cancel" onclick="cancelReservationDirect('${reservation.id}')">Cancel Reservation</button>
                     </div>
                 </div>
             `;
@@ -310,7 +310,40 @@
             }
         }
         
-        // cancelReservation function is now in common.js
+        async function cancelReservationDirect(reservationId) {
+            // Confirm cancellation
+            if (!confirm('Are you sure you want to cancel this reservation? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                // Disable button during cancellation
+                const cancelBtn = document.querySelector('.btn-cancel');
+                if (cancelBtn) {
+                    cancelBtn.disabled = true;
+                    cancelBtn.textContent = 'Cancelling...';
+                }
+                
+                // Delete the reservation
+                await Storage.deleteReservation(reservationId);
+                
+                // Show success message
+                alert('Reservation cancelled successfully.');
+                
+                // Redirect back to reservations page
+                window.location.href = 'view-reservations.html';
+            } catch (error) {
+                console.error('Error cancelling reservation:', error);
+                alert('Failed to cancel reservation. Please try again.');
+                
+                // Re-enable button
+                const cancelBtn = document.querySelector('.btn-cancel');
+                if (cancelBtn) {
+                    cancelBtn.disabled = false;
+                    cancelBtn.textContent = 'Cancel Reservation';
+                }
+            }
+        }
         
         window.onload = loadReservationDetails;
     </script>
@@ -345,20 +378,6 @@
         </footer>
     </div>
     
-    <!-- Cancel Reservation Modal -->
-    <div id="cancelModal" class="modal">
-        <div class="modal-content">
-            <h3>Cancel Reservation</h3>
-            <p><strong>To cancel this reservation, you must enter the exact booking name used when making the reservation:</strong></p>
-            <div id="cancelReservationInfo"></div>
-            <input type="text" id="cancelNameInput" placeholder="Enter the booking name exactly as it appears" autocomplete="off">
-            <div id="cancelErrorMsg" class="error-message"></div>
-            <div class="modal-buttons">
-                <button class="btn-close" onclick="closeCancelModal()">Close</button>
-                <button class="btn-confirm" id="confirmCancelBtn" onclick="verifyAndCancel()">Confirm Cancellation</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
 
