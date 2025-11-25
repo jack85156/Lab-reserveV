@@ -378,7 +378,6 @@
                     input.addEventListener('keypress', function(event) {
                         if (event.key === 'Enter') {
                             event.preventDefault();
-                            console.log('Enter key pressed, calling searchReservations');
                             searchReservations();
                         }
                     });
@@ -388,18 +387,13 @@
                 if (searchButton) {
                     searchButton.addEventListener('click', function(event) {
                         event.preventDefault();
-                        console.log('Search button clicked');
                         searchReservations();
                     });
-                } else {
-                    console.error('Search button not found');
                 }
             }, 100);
         }
         
         async function searchReservations() {
-            console.log('searchReservations function called');
-            
             try {
                 const nameInput = document.getElementById('searchNameInput');
                 const errorMsg = document.getElementById('searchErrorMsg');
@@ -449,14 +443,10 @@
                 // Load reservations for this name
                 try {
                     // Wait for Storage to be ready
-                    console.log('Waiting for Storage...');
                     await waitForStorage();
-                    console.log('Storage is ready');
                     
                     // Load reservations
-                    console.log('Loading reservations...');
                     await loadReservations(enteredName);
-                    console.log('Reservations loaded');
                 } catch (error) {
                     console.error('Error searching reservations:', error);
                     const errorMessage = error.message || 'An error occurred while searching. Please try again.';
@@ -511,9 +501,7 @@
                     throw new Error('Storage system not available. Please refresh the page.');
                 }
                 
-                console.log('Loading reservations, searchName:', searchName);
                 const reservations = await Storage.getReservations();
-                console.log('Loaded reservations:', reservations.length, 'reservations');
                 
                 // Ensure reservations is an array
                 if (!Array.isArray(reservations)) {
@@ -525,75 +513,29 @@
                 let filteredReservations = reservations;
                 if (searchName) {
                     const normalizedSearch = searchName.toLowerCase().trim();
-                    console.log('=== SEARCH DEBUG ===');
-                    console.log('Searching for name:', normalizedSearch);
-                    console.log('Total reservations:', reservations.length);
-                    console.log('All reservation names (raw):', reservations.map(r => r.name));
-                    console.log('All reservation names (normalized):', reservations.map(r => r.name ? String(r.name).toLowerCase().trim() : 'NULL'));
-                    
-                    // Get all unique names for debugging
-                    const allNames = [...new Set(reservations.map(r => r.name).filter(n => n && n.trim()))];
-                    console.log('Unique names in system:', allNames);
-                    console.log('Unique names (normalized):', allNames.map(n => n.toLowerCase().trim()));
                     
                     filteredReservations = reservations.filter(r => {
                         // Handle cases where name might be null/undefined/empty
                         if (!r.name || !String(r.name).trim()) {
-                            console.log('Reservation missing name:', r.id, r.instrument);
                             return false;
                         }
                         // Normalize both names for comparison (trim and lowercase)
                         // This handles both old (untrimmed) and new (trimmed) reservations
                         const normalizedReservationName = String(r.name).toLowerCase().trim();
-                        const matches = normalizedReservationName === normalizedSearch;
-                        if (matches) {
-                            console.log('✓ Match found!', { id: r.id, name: r.name, instrument: r.instrument });
-                        } else {
-                            // Log close matches for debugging
-                            if (normalizedReservationName.includes(normalizedSearch) || normalizedSearch.includes(normalizedReservationName)) {
-                                console.log('⚠ Close match (partial):', { search: normalizedSearch, found: normalizedReservationName });
-                            }
-                        }
-                        return matches;
+                        return normalizedReservationName === normalizedSearch;
                     });
-                    console.log('Filtered reservations found:', filteredReservations.length);
-                    console.log('=== END SEARCH DEBUG ===');
                 }
                 
                 if (filteredReservations.length === 0) {
-                    // Debug: Show available names if search fails (for troubleshooting)
-                    let debugInfo = '';
-                    if (searchName && reservations.length > 0) {
-                        const uniqueNames = [...new Set(reservations.map(r => r.name).filter(n => n && n.trim()))];
-                        if (uniqueNames.length > 0) {
-                            const searchNormalized = searchName.toLowerCase().trim();
-                            const similarNames = uniqueNames.filter(n => {
-                                const nNormalized = n.toLowerCase().trim();
-                                return nNormalized.includes(searchNormalized) || searchNormalized.includes(nNormalized);
-                            });
-                            
-                            debugInfo = `
-                                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 4px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">
-                                    <p style="font-weight: bold; margin-bottom: 10px;">Debug Information:</p>
-                                    <p style="font-size: 0.9em; color: #666; margin-bottom: 5px;">You searched for: <strong>"${searchName}"</strong></p>
-                                    <p style="font-size: 0.9em; color: #666; margin-bottom: 5px;">Total reservations in system: ${reservations.length}</p>
-                                    ${similarNames.length > 0 ? `<p style="font-size: 0.9em; color: #856404; margin-bottom: 5px;">⚠ Similar names found: ${similarNames.join(', ')}</p>` : ''}
-                                    <p style="font-size: 0.9em; color: #666; margin-bottom: 5px;">All names in system: ${uniqueNames.slice(0, 10).join(', ')}${uniqueNames.length > 10 ? ` (and ${uniqueNames.length - 10} more...)` : ''}</p>
-                                    <p style="font-size: 0.85em; color: #999; margin-top: 10px; font-style: italic;">Tip: Make sure the name matches exactly (case-insensitive). Check for extra spaces.</p>
-                                </div>
-                            `;
-                        } else {
-                            debugInfo = `<p style="margin-top: 15px; font-size: 0.9em; color: #856404;">⚠ No reservations with names found in system. Total reservations: ${reservations.length}</p>`;
-                        }
-                    }
-                    
                     container.innerHTML = `
                         <div class="empty-state">
                             <h3>No Reservations Found</h3>
                             <p>${searchName ? `No reservations found for "${searchName}".` : 'You haven\'t made any reservations yet.'}</p>
-                            ${debugInfo}
-                            ${searchName ? `<button onclick="showNameInput()" class="btn-primary" style="margin-top: 15px;">Search Different Name</button>` : ''}
-                            <a href="make-reservation.html" class="btn-primary" style="margin-top: 15px; display: inline-block;">Make a Reservation</a>
+                            <p style="color: #6c757d; font-size: 0.95em; margin-top: 10px;">
+                                <strong>Note:</strong> Please double-check your entry for any typos or case-sensitive differences.
+                            </p>
+                            ${searchName ? `<button onclick="showNameInput()" class="btn-primary" style="margin-top: 20px;">Search Different Name</button>` : ''}
+                            <a href="make-reservation.html" class="btn-primary" style="margin-top: 20px; display: inline-block;">Make a Reservation</a>
                         </div>
                     `;
                     return;
