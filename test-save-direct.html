@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Save to Supabase</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #000;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover { background: #333; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Save to Supabase</h1>
+        <div id="status"></div>
+        <button onclick="testSave()">Test Save Reservation</button>
+        <button onclick="checkStatus()">Check Connection Status</button>
+        <div id="results"></div>
+    </div>
+    
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="storage.js"></script>
+    
+    <script>
+        function showStatus(message, type) {
+            document.getElementById('status').innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        function checkStatus() {
+            const url = window.SUPABASE_URL;
+            const key = window.SUPABASE_ANON_KEY;
+            const lib = typeof window.supabase !== 'undefined';
+            const client = typeof supabase !== 'undefined' && supabase !== null;
+            
+            let status = '<h3>Connection Status</h3><pre>';
+            status += `URL: ${url || 'NOT SET'}\n`;
+            status += `Key: ${key ? 'Set (' + key.length + ' chars)' : 'NOT SET'}\n`;
+            status += `Library: ${lib ? '✅ Loaded' : '❌ NOT LOADED'}\n`;
+            status += `Client: ${client ? '✅ Initialized' : '❌ NOT INITIALIZED'}\n`;
+            status += `Table: bookings\n`;
+            status += '</pre>';
+            
+            document.getElementById('results').innerHTML = status;
+        }
+        
+        async function testSave() {
+            showStatus('⏳ Testing save...', 'info');
+            
+            try {
+                // Check if Storage is available
+                if (typeof Storage === 'undefined' || !Storage || typeof Storage.saveReservation !== 'function') {
+                    throw new Error('Storage API not available');
+                }
+                
+                // Create test reservation
+                const testReservation = {
+                    id: 'test_' + Date.now(),
+                    instrument: 'Test Instrument',
+                    name: 'Test User ' + Date.now(),
+                    date: '2099-12-31',
+                    startTime: '00:00',
+                    endTime: '00:30',
+                    purpose: 'Testing save functionality'
+                };
+                
+                console.log('Attempting to save:', testReservation);
+                
+                // Try to save
+                const saved = await Storage.saveReservation(testReservation);
+                
+                console.log('Save result:', saved);
+                
+                // Verify it was saved
+                const allReservations = await Storage.getReservations();
+                const found = allReservations.find(r => r.id === testReservation.id);
+                
+                if (found) {
+                    showStatus('✅ SUCCESS! Reservation saved to cloud database!', 'success');
+                    document.getElementById('results').innerHTML = `
+                        <h3>Save Successful!</h3>
+                        <pre>${JSON.stringify(saved, null, 2)}</pre>
+                        <p>✅ Found in database: ${found.name}</p>
+                        <p><strong>Your cloud database is working!</strong></p>
+                    `;
+                    
+                    // Clean up test record
+                    setTimeout(async () => {
+                        try {
+                            await Storage.deleteReservation(testReservation.id);
+                            console.log('Test record cleaned up');
+                        } catch (e) {
+                            console.log('Could not clean up test record:', e);
+                        }
+                    }, 5000);
+                } else {
+                    showStatus('⚠️ Save appeared successful but reservation not found in database', 'error');
+                }
+            } catch (error) {
+                console.error('Save test failed:', error);
+                showStatus(`❌ Save failed: ${error.message}`, 'error');
+                document.getElementById('results').innerHTML = `
+                    <h3>Error Details</h3>
+                    <pre>${error.message}\n\n${error.stack || ''}</pre>
+                    <p><strong>Check browser console (F12) for more details.</strong></p>
+                `;
+            }
+        }
+        
+        // Auto-check status on load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                checkStatus();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
+

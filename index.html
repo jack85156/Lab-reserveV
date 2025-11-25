@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. V's Lab - Instrument Reservation System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+        
+        header {
+            background: #ffffff;
+            color: #000000;
+            padding: 40px;
+            border-bottom: 2px solid #e0e0e0;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .header-content {
+            text-align: left;
+            flex: 1;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .clock-display {
+            padding: 15px 30px;
+            background: #f8f9fa;
+            border: 2px solid #000000;
+            border-radius: 8px;
+            text-align: center;
+            position: absolute;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        @media (max-width: 768px) {
+            .clock-display {
+                position: static;
+                transform: none;
+                margin-top: 20px;
+                width: 100%;
+            }
+        }
+        
+        .clock-display .clock-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .clock-display .clock-time {
+            font-size: 1.8em;
+            color: #000000;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .clock-display .clock-date {
+            font-size: 1.1em;
+            color: #333;
+            margin-top: 5px;
+        }
+        
+        nav {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        
+        nav a {
+            text-decoration: none;
+            color: #000000;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        
+        nav a:hover {
+            background: #000000;
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        main {
+            padding: 60px 40px;
+        }
+        
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .welcome-section h2 {
+            color: #000000;
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .guidelines-box {
+            background: #f8f9fa;
+            border: 2px solid #000000;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .guidelines-box h3 {
+            color: #000000;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+        }
+        
+        .guidelines-box h3::before {
+            content: "⚠️";
+            font-size: 1.2em;
+        }
+        
+        .guidelines-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .guidelines-list li {
+            color: #000000;
+            font-size: 1.1em;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        .guidelines-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #000000;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .first-time-notice {
+            background: #f8f9fa;
+            border-left: 4px solid #000000;
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .first-time-notice strong {
+            color: #000000;
+            font-size: 1.1em;
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .first-time-notice p {
+            color: #000000;
+            line-height: 1.6;
+            margin: 0;
+        }
+        
+        .first-time-notice a {
+            color: #000000;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+        
+        .first-time-notice a:hover {
+            color: #333333;
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .action-card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-color: #000000;
+        }
+        
+        .action-card h3 {
+            color: #000000;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .action-card p {
+            color: #333333;
+            line-height: 1.6;
+        }
+        
+        .icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>🥛 Dr. V's Lab</h1>
+                <p>Instrument Reservation System</p>
+            </div>
+            <div class="clock-display">
+                <div class="clock-label">Central Time (US)</div>
+                <div class="clock-time" id="clockTime">--:--:--</div>
+                <div class="clock-date" id="clockDate">-- --, ----</div>
+            </div>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="instruments.html">View Instruments</a></li>
+                <li><a href="make-reservation.html">Make Reservation</a></li>
+                <li><a href="view-reservations.html">My Reservations</a></li>
+            </ul>
+        </nav>
+        
+        <main>
+            <div class="welcome-section">
+                <h2>Welcome to Dr. V's Lab!</h2>
+            </div>
+            
+            <div class="guidelines-box">
+                <h3>Please read before booking:</h3>
+                <ul class="guidelines-list">
+                    <li>Please find the instrument card for the machine you intend to use below.</li>
+                    <li>Please select the date and time slots required for your experiment.</li>
+                    <li>Please enter your name to confirm the reservation.</li>
+                </ul>
+                <div class="first-time-notice">
+                    <strong>First-time users:</strong>
+                    <p>Please email <a href="mailto:VardhanabhutiB@missouri.edu">Dr. V</a> to confirm and get permission before booking.</p>
+                </div>
+            </div>
+            
+            <div class="quick-actions">
+                <a href="instruments.html" class="action-card">
+                    <div class="icon">🔬</div>
+                    <h3>View Instruments</h3>
+                    <p>Browse all available lab instruments and check their current status</p>
+                </a>
+                
+                <a href="make-reservation.html" class="action-card">
+                    <div class="icon">📅</div>
+                    <h3>Make Reservation</h3>
+                    <p>Book an instrument for your research needs</p>
+                </a>
+                
+                <a href="view-reservations.html" class="action-card">
+                    <div class="icon">📋</div>
+                    <h3>My Reservations</h3>
+                    <p>View and manage your existing reservations by name</p>
+                </a>
+            </div>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 Dr. V's Lab. All rights reserved.</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Function to format date and time in Central Time Zone
+        function updateClock() {
+            const now = new Date();
+            
+            // Format time in Central Time Zone
+            const timeFormatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'America/Chicago',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            
+            // Format date in Central Time Zone
+            const dateFormatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'America/Chicago',
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            const timeString = timeFormatter.format(now);
+            const dateString = dateFormatter.format(now);
+            
+            document.getElementById('clockTime').textContent = timeString;
+            document.getElementById('clockDate').textContent = dateString;
+        }
+        
+        // Update clock immediately and then every second
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>
+

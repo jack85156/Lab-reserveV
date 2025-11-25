@@ -1,0 +1,16 @@
+{
+  "name": "dr-v-lab-reservation-system",
+  "version": "1.0.0",
+  "description": "Instrument Reservation System for Dr. V's Lab",
+  "scripts": {
+    "dev": "npx http-server -p 3000"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "devDependencies": {}
+}
+
+
+
+

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Diagnostic</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #000; margin-bottom: 20px; }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: #000;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover { background: #333; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.9em;
+            border: 1px solid #e0e0e0;
+        }
+        .log { font-family: monospace; font-size: 0.85em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Supabase Connection Diagnostic Tool</h1>
+        <p>This will help identify why Supabase credentials are verified but connection fails.</p>
+        
+        <div class="test-section">
+            <h2>Step 1: Configuration Check</h2>
+            <div id="configResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Step 2: Library Loading Check</h2>
+            <div id="libraryResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Step 3: Client Initialization</h2>
+            <div id="initResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Step 4: Database Connection Test</h2>
+            <div id="dbResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Step 5: Table Existence Check</h2>
+            <div id="tableResult"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Step 6: RLS Policy Check</h2>
+            <div id="rlsResult"></div>
+        </div>
+        
+        <button onclick="runFullDiagnostic()">Run Full Diagnostic</button>
+        <button onclick="clearResults()">Clear Results</button>
+        
+        <div class="test-section">
+            <h2>Console Logs</h2>
+            <div id="consoleLogs" class="log"></div>
+        </div>
+    </div>
+    
+    <!-- Load Supabase configuration and library -->
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="storage.js"></script>
+    
+    <script>
+        const logs = [];
+        
+        function log(message, type = 'info') {
+            logs.push(`[${new Date().toLocaleTimeString()}] ${message}`);
+            updateLogs();
+            console.log(message);
+        }
+        
+        function updateLogs() {
+            document.getElementById('consoleLogs').innerHTML = logs.join('<br>');
+        }
+        
+        function showResult(elementId, message, type) {
+            document.getElementById(elementId).innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        function clearResults() {
+            logs.length = 0;
+            updateLogs();
+            ['configResult', 'libraryResult', 'initResult', 'dbResult', 'tableResult', 'rlsResult'].forEach(id => {
+                document.getElementById(id).innerHTML = '';
+            });
+        }
+        
+        async function runFullDiagnostic() {
+            clearResults();
+            log('Starting full diagnostic...');
+            
+            // Step 1: Configuration
+            log('Step 1: Checking configuration...');
+            const url = window.SUPABASE_URL;
+            const key = window.SUPABASE_ANON_KEY;
+            
+            if (!url || !key) {
+                showResult('configResult', '❌ ERROR: Credentials not found!', 'error');
+                log('ERROR: Credentials not configured');
+                return;
+            }
+            
+            if (url.includes('your-project-id') || key.includes('your-anon-key')) {
+                showResult('configResult', '⚠️ WARNING: Credentials are placeholders!', 'warning');
+                log('WARNING: Placeholder credentials detected');
+                return;
+            }
+            
+            showResult('configResult', `✅ Configuration found<br>URL: ${url}<br>Key: ${key.substring(0, 30)}...`, 'success');
+            log(`✅ Configuration: URL=${url}, Key length=${key.length}`);
+            
+            // Step 2: Library Loading
+            log('Step 2: Checking Supabase library...');
+            let libFound = false;
+            let libMethod = '';
+            
+            // Check multiple ways the library might be exposed
+            if (typeof window.supabase !== 'undefined') {
+                if (typeof window.supabase.createClient === 'function') {
+                    libFound = true;
+                    libMethod = 'window.supabase.createClient';
+                } else if (window.supabase.default && typeof window.supabase.default.createClient === 'function') {
+                    libFound = true;
+                    libMethod = 'window.supabase.default.createClient';
+                }
+            }
+            
+            // Check if it's exposed as a global
+            if (!libFound && typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
+                libFound = true;
+                libMethod = 'global supabase.createClient';
+            }
+            
+            // Check for UMD build specific exposure
+            if (!libFound) {
+                // Try to find it in window object
+                for (let key in window) {
+                    if (key.includes('supabase') || (window[key] && typeof window[key].createClient === 'function')) {
+                        log(`Found potential Supabase object: ${key}`);
+                    }
+                }
+            }
+            
+            if (libFound) {
+                showResult('libraryResult', `✅ Library loaded via: ${libMethod}`, 'success');
+                log(`✅ Library found: ${libMethod}`);
+            } else {
+                showResult('libraryResult', '❌ ERROR: Supabase library not found!<br>Check Network tab to see if script loaded.', 'error');
+                log('ERROR: Supabase library not found');
+                return;
+            }
+            
+            // Step 3: Client Initialization
+            log('Step 3: Initializing Supabase client...');
+            let client = null;
+            
+            try {
+                if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+                    client = window.supabase.createClient(url, key);
+                    log('✅ Client created via window.supabase.createClient');
+                } else if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
+                    client = supabase.createClient(url, key);
+                    log('✅ Client created via global supabase.createClient');
+                } else {
+                    throw new Error('createClient function not found');
+                }
+                
+                showResult('initResult', '✅ Client initialized successfully', 'success');
+            } catch (error) {
+                showResult('initResult', `❌ ERROR: Failed to initialize client<br>${error.message}`, 'error');
+                log(`ERROR: Client initialization failed: ${error.message}`);
+                return;
+            }
+            
+            // Step 4: Database Connection Test
+            log('Step 4: Testing database connection...');
+            try {
+                // Try a simple query to test connection
+                const { data, error } = await client.from('bookings').select('count').limit(1);
+                
+                if (error) {
+                    if (error.code === '42P01' || error.message.includes('does not exist')) {
+                        showResult('dbResult', '❌ ERROR: Table "bookings" does not exist!<br>Create it in Supabase Dashboard → SQL Editor.', 'error');
+                        log(`ERROR: Table doesn't exist: ${error.message}`);
+                    } else if (error.code === '42501' || error.message.includes('permission denied') || error.message.includes('RLS')) {
+                        showResult('dbResult', '❌ ERROR: Permission denied!<br>Check Row Level Security (RLS) policies in Supabase Dashboard.', 'error');
+                        log(`ERROR: Permission denied: ${error.message}`);
+                    } else {
+                        showResult('dbResult', `❌ ERROR: ${error.message}<br>Code: ${error.code || 'unknown'}`, 'error');
+                        log(`ERROR: ${error.message} (Code: ${error.code})`);
+                    }
+                } else {
+                    showResult('dbResult', '✅ Database connection successful!', 'success');
+                    log('✅ Database connection works');
+                }
+            } catch (error) {
+                if (error.message.includes('Failed to fetch')) {
+                    showResult('dbResult', '❌ ERROR: Network error - Failed to fetch<br>Possible causes:<br>- Table doesn\'t exist<br>- Network/firewall blocking<br>- Wrong URL', 'error');
+                    log(`ERROR: Network error - ${error.message}`);
+                } else {
+                    showResult('dbResult', `❌ ERROR: ${error.message}`, 'error');
+                    log(`ERROR: ${error.message}`);
+                }
+            }
+            
+            // Step 5: Table Existence
+            log('Step 5: Checking if table exists...');
+            try {
+                const { data, error } = await client.from('bookings').select('*').limit(1);
+                
+                if (error) {
+                    if (error.code === '42P01' || error.message.includes('does not exist')) {
+                        showResult('tableResult', '❌ Table "bookings" does NOT exist!<br><br>Run this SQL in Supabase Dashboard → SQL Editor:<br><pre>CREATE TABLE IF NOT EXISTS bookings (\n  id TEXT PRIMARY KEY,\n  instrument TEXT NOT NULL,\n  name TEXT NOT NULL,\n  date TEXT NOT NULL,\n  startTime TEXT NOT NULL,\n  endTime TEXT NOT NULL,\n  purpose TEXT,\n  temperature TEXT,\n  site TEXT,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n);\n\nALTER TABLE bookings ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY "Allow all operations" ON bookings\n  FOR ALL\n  USING (true)\n  WITH CHECK (true);</pre>', 'error');
+                        log('ERROR: Table does not exist');
+                    } else {
+                        showResult('tableResult', `❌ Error checking table: ${error.message}`, 'error');
+                        log(`ERROR: ${error.message}`);
+                    }
+                } else {
+                    showResult('tableResult', '✅ Table "bookings" exists and is accessible!', 'success');
+                    log('✅ Table exists');
+                }
+            } catch (error) {
+                showResult('tableResult', `❌ Error: ${error.message}`, 'error');
+                log(`ERROR: ${error.message}`);
+            }
+            
+            // Step 6: RLS Policy Check
+            log('Step 6: Testing RLS policies...');
+            try {
+                // Try to insert a test record (then delete it)
+                const testId = 'test_' + Date.now();
+                const { error: insertError } = await client.from('bookings').insert([{
+                    id: testId,
+                    instrument: 'Test',
+                    name: 'Test User',
+                    date: '2099-12-31',
+                    startTime: '00:00',
+                    endTime: '00:30'
+                }]);
+                
+                if (insertError) {
+                    if (insertError.message.includes('permission denied') || insertError.message.includes('RLS')) {
+                        showResult('rlsResult', '❌ ERROR: RLS policy blocking INSERT!<br><br>Run this SQL in Supabase Dashboard → SQL Editor:<br><pre>CREATE POLICY "Allow all operations" ON bookings\n  FOR ALL\n  USING (true)\n  WITH CHECK (true);</pre>', 'error');
+                        log(`ERROR: RLS blocking: ${insertError.message}`);
+                    } else {
+                        showResult('rlsResult', `⚠️ Insert test failed: ${insertError.message}`, 'warning');
+                        log(`WARNING: ${insertError.message}`);
+                    }
+                } else {
+                    // Delete the test record
+                    await client.from('bookings').delete().eq('id', testId);
+                    showResult('rlsResult', '✅ RLS policies allow INSERT and DELETE operations!', 'success');
+                    log('✅ RLS policies work correctly');
+                }
+            } catch (error) {
+                showResult('rlsResult', `❌ Error testing RLS: ${error.message}`, 'error');
+                log(`ERROR: ${error.message}`);
+            }
+            
+            log('Diagnostic complete!');
+        }
+        
+        // Auto-run on load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                runFullDiagnostic();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
+

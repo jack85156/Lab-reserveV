@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservation Details - Dr. V's Lab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 1px solid #e0e0e0;
+        }
+        
+        header {
+            background: #ffffff;
+            color: #000000;
+            padding: 40px;
+            text-align: center;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        nav {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        
+        nav a {
+            text-decoration: none;
+            color: #000000;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        
+        nav a:hover {
+            background: #000000;
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        main {
+            padding: 40px;
+        }
+        
+        .page-title {
+            font-size: 2em;
+            color: #000000;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 700;
+        }
+        
+        .details-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .details-section {
+            margin-bottom: 30px;
+        }
+        
+        .details-section h3 {
+            color: #000000;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+            font-weight: 700;
+        }
+        
+        .detail-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .detail-label {
+            font-weight: 700;
+            color: #000000;
+        }
+        
+        .detail-value {
+            color: #333333;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.95em;
+            font-weight: 600;
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-back {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-back:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+        }
+        
+        .btn-cancel {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-cancel:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        }
+        
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #000000;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 25px;
+        }
+        
+        .info-box p {
+            color: #000000;
+            line-height: 1.6;
+        }
+        
+        footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e9ecef;
+        }
+        
+        @media (max-width: 600px) {
+            .detail-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <!-- Supabase Configuration -->
+    <script src="supabase-config.js"></script>
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <!-- Storage abstraction (must come after Supabase) -->
+    <script src="storage.js"></script>
+    <script src="common.js"></script>
+    <script>
+        function loadReservationDetails() {
+            const reservationData = localStorage.getItem('viewingReservation');
+            if (!reservationData) {
+                document.getElementById('details-container').innerHTML = `
+                    <div class="info-box">
+                        <p>No reservation details found. <a href="view-reservations.html">Go back to reservations</a></p>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                const reservation = JSON.parse(reservationData);
+                
+                // Validate reservation data
+                if (!reservation || !reservation.id || !reservation.date) {
+                    throw new Error('Invalid reservation data');
+                }
+                
+                // Format date (with fallback if function not available)
+                let formattedDate;
+                if (typeof formatDateWithWeekdayInCentral === 'function') {
+                    formattedDate = formatDateWithWeekdayInCentral(reservation.date);
+                } else {
+                    // Fallback: simple date formatting
+                    const [year, month, day] = reservation.date.split('-');
+                    const date = new Date(year, month - 1, day);
+                    formattedDate = date.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        timeZone: 'America/Chicago'
+                    });
+                }
+                
+                // Format reservation ID (handle short IDs)
+                const reservationId = reservation.id.length >= 8 ? reservation.id.substring(0, 8) : reservation.id;
+            
+                document.getElementById('details-container').innerHTML = `
+                    <div class="details-card">
+                        <div class="details-section">
+                            <h3>Reservation Information</h3>
+                            <div class="detail-row">
+                                <div class="detail-label">Reservation ID:</div>
+                                <div class="detail-value">#${reservationId}</div>
+                            </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Status:</div>
+                            <div class="detail-value"><span class="status-badge">Confirmed</span></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Instrument:</div>
+                            <div class="detail-value">${reservation.instrument}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Date:</div>
+                            <div class="detail-value">${formattedDate}</div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Time:</div>
+                            <div class="detail-value">${reservation.startTime} - ${reservation.endTime}</div>
+                        </div>
+                        ${reservation.temperature ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Temperature:</div>
+                            <div class="detail-value">${reservation.temperature}</div>
+                        </div>
+                        ` : ''}
+                        ${reservation.purpose ? `
+                        <div class="detail-row">
+                            <div class="detail-label">Purpose:</div>
+                            <div class="detail-value">${reservation.purpose}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="details-section">
+                        <h3>Researcher Information</h3>
+                        <div class="detail-row">
+                            <div class="detail-label">Name:</div>
+                            <div class="detail-value">${reservation.name}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <a href="view-reservations.html" class="btn btn-back">← Back to Reservations</a>
+                        <button class="btn btn-cancel" onclick="showCancelModal('${reservation.id}', '${reservation.name.replace(/'/g, "\\'")}')">Cancel Reservation</button>
+                    </div>
+                </div>
+            `;
+            } catch (error) {
+                console.error('Error loading reservation details:', error);
+                document.getElementById('details-container').innerHTML = `
+                    <div class="info-box">
+                        <p>Error loading reservation details: ${error.message}</p>
+                        <p><a href="view-reservations.html">Go back to reservations</a></p>
+                    </div>
+                `;
+            }
+        }
+        
+        // cancelReservation function is now in common.js
+        
+        window.onload = loadReservationDetails;
+    </script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🥛 Dr. V's Lab</h1>
+            <p>Instrument Reservation System</p>
+        </header>
+        
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="instruments.html">View Instruments</a></li>
+                <li><a href="make-reservation.html">Make Reservation</a></li>
+                <li><a href="view-reservations.html">My Reservations</a></li>
+            </ul>
+        </nav>
+        
+        <main>
+            <h2 class="page-title">Reservation Details</h2>
+            
+            <div id="details-container">
+                <!-- Details will be loaded here -->
+            </div>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 Dr. V's Lab. All rights reserved.</p>
+        </footer>
+    </div>
+    
+    <!-- Cancel Reservation Modal -->
+    <div id="cancelModal" class="modal">
+        <div class="modal-content">
+            <h3>Cancel Reservation</h3>
+            <p><strong>To cancel this reservation, you must enter the exact booking name used when making the reservation:</strong></p>
+            <div id="cancelReservationInfo"></div>
+            <input type="text" id="cancelNameInput" placeholder="Enter the booking name exactly as it appears" autocomplete="off">
+            <div id="cancelErrorMsg" class="error-message"></div>
+            <div class="modal-buttons">
+                <button class="btn-close" onclick="closeCancelModal()">Close</button>
+                <button class="btn-confirm" id="confirmCancelBtn" onclick="verifyAndCancel()">Confirm Cancellation</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

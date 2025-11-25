@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Save Issue</title>
+    <style>
+        body {
+            font-family: monospace;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .log {
+            background: #252526;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 3px solid #007acc;
+            white-space: pre-wrap;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error { border-left-color: #f48771; }
+        .success { border-left-color: #89d185; }
+        .warning { border-left-color: #cca700; }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #005a9e; }
+        h2 { color: #4ec9b0; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Save Issue</h1>
+    <button onclick="runFullDiagnostic()">Run Full Diagnostic</button>
+    <button onclick="testDirectInsert()">Test Direct Insert</button>
+    <button onclick="clearLogs()">Clear Logs</button>
+    <div id="logs"></div>
+    
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="storage.js"></script>
+    
+    <script>
+        const logs = [];
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            logs.push({ timestamp, message, type });
+            updateDisplay();
+        }
+        
+        function updateDisplay() {
+            const container = document.getElementById('logs');
+            container.innerHTML = logs.map(log => {
+                const className = log.type === 'error' ? 'error' : 
+                                 log.type === 'success' ? 'success' : 
+                                 log.type === 'warning' ? 'warning' : '';
+                return `<div class="log ${className}">[${log.timestamp}] ${log.message}</div>`;
+            }).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function clearLogs() {
+            logs.length = 0;
+            updateDisplay();
+        }
+        
+        async function runFullDiagnostic() {
+            log('=== Starting Full Diagnostic ===', 'info');
+            
+            // 1. Check configuration
+            log('1. Checking configuration...', 'info');
+            const url = window.SUPABASE_URL;
+            const key = window.SUPABASE_ANON_KEY;
+            log(`   URL: ${url || 'NOT SET'}`, url ? 'success' : 'error');
+            log(`   Key: ${key ? 'Set (' + key.length + ' chars)' : 'NOT SET'}`, key ? 'success' : 'error');
+            
+            // 2. Check library
+            log('2. Checking Supabase library...', 'info');
+            const libLoaded = typeof window.supabase !== 'undefined';
+            log(`   Library loaded: ${libLoaded}`, libLoaded ? 'success' : 'error');
+            if (libLoaded) {
+                log(`   createClient available: ${typeof window.supabase.createClient === 'function'}`, 'info');
+            }
+            
+            // 3. Check client initialization
+            log('3. Checking client initialization...', 'info');
+            // Wait a bit for storage.js to initialize
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Access supabase from storage.js context (we'll create our own)
+            let client = null;
+            try {
+                if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+                    client = window.supabase.createClient(url, key);
+                    log('   Client created successfully', 'success');
+                } else {
+                    log('   Cannot create client - library not available', 'error');
+                    return;
+                }
+            } catch (e) {
+                log(`   Error creating client: ${e.message}`, 'error');
+                return;
+            }
+            
+            // 4. Test table exists
+            log('4. Testing table existence...', 'info');
+            try {
+                const { data, error } = await client.from('bookings').select('id').limit(1);
+                if (error) {
+                    if (error.code === '42P01') {
+                        log('   ❌ Table "bookings" does not exist!', 'error');
+                        log('   → Create it in Supabase Dashboard → SQL Editor', 'warning');
+                    } else {
+                        log(`   Error: ${error.message} (Code: ${error.code})`, 'error');
+                    }
+                } else {
+                    log('   ✅ Table exists', 'success');
+                }
+            } catch (e) {
+                log(`   Exception: ${e.message}`, 'error');
+            }
+            
+            // 5. Test insert
+            log('5. Testing insert operation...', 'info');
+            const testReservation = {
+                id: 'debug_test_' + Date.now(),
+                instrument: 'Debug Test Instrument',
+                name: 'Debug Test User',
+                date: '2099-12-31',
+                startTime: '00:00',
+                endTime: '00:30'
+            };
+            
+            try {
+                log(`   Attempting to insert: ${JSON.stringify(testReservation, null, 2)}`, 'info');
+                const { data, error } = await client
+                    .from('bookings')
+                    .insert([testReservation])
+                    .select()
+                    .single();
+                
+                if (error) {
+                    log(`   ❌ Insert failed: ${error.message}`, 'error');
+                    log(`   Error code: ${error.code}`, 'error');
+                    log(`   Error details: ${error.details || 'none'}`, 'error');
+                    log(`   Error hint: ${error.hint || 'none'}`, 'error');
+                    
+                    if (error.code === '42501') {
+                        log('   → RLS policy is blocking the insert!', 'warning');
+                        log('   → Add a permissive RLS policy in Supabase Dashboard', 'warning');
+                    }
+                } else {
+                    log('   ✅ Insert successful!', 'success');
+                    log(`   Returned data: ${JSON.stringify(data, null, 2)}`, 'success');
+                    
+                    // Clean up
+                    try {
+                        await client.from('bookings').delete().eq('id', testReservation.id);
+                        log('   Test record cleaned up', 'info');
+                    } catch (e) {
+                        log(`   Could not clean up: ${e.message}`, 'warning');
+                    }
+                }
+            } catch (e) {
+                log(`   Exception during insert: ${e.message}`, 'error');
+                log(`   Stack: ${e.stack}`, 'error');
+            }
+            
+            // 6. Test Storage API
+            log('6. Testing Storage.saveReservation()...', 'info');
+            try {
+                const testReservation2 = {
+                    id: 'debug_storage_' + Date.now(),
+                    instrument: 'Storage Test',
+                    name: 'Storage Test User',
+                    date: '2099-12-31',
+                    startTime: '01:00',
+                    endTime: '01:30'
+                };
+                
+                log(`   Calling Storage.saveReservation()...`, 'info');
+                const result = await Storage.saveReservation(testReservation2);
+                log(`   Result: ${JSON.stringify(result, null, 2)}`, 'success');
+                
+                // Clean up
+                try {
+                    await Storage.deleteReservation(testReservation2.id);
+                    log('   Test record cleaned up', 'info');
+                } catch (e) {
+                    log(`   Could not clean up: ${e.message}`, 'warning');
+                }
+            } catch (e) {
+                log(`   Storage.saveReservation() failed: ${e.message}`, 'error');
+                log(`   Stack: ${e.stack}`, 'error');
+            }
+            
+            log('=== Diagnostic Complete ===', 'info');
+        }
+        
+        async function testDirectInsert() {
+            log('=== Testing Direct Insert ===', 'info');
+            
+            const url = window.SUPABASE_URL;
+            const key = window.SUPABASE_ANON_KEY;
+            
+            if (!url || !key) {
+                log('❌ Supabase credentials not configured', 'error');
+                return;
+            }
+            
+            if (typeof window.supabase === 'undefined' || typeof window.supabase.createClient !== 'function') {
+                log('❌ Supabase library not loaded', 'error');
+                return;
+            }
+            
+            const client = window.supabase.createClient(url, key);
+            
+            const testReservation = {
+                id: 'direct_test_' + Date.now(),
+                instrument: 'Direct Test',
+                name: 'Direct Test User',
+                date: '2099-12-31',
+                startTime: '02:00',
+                endTime: '02:30'
+            };
+            
+            log(`Inserting: ${JSON.stringify(testReservation, null, 2)}`, 'info');
+            
+            try {
+                const { data, error } = await client
+                    .from('bookings')
+                    .insert([testReservation])
+                    .select()
+                    .single();
+                
+                if (error) {
+                    log(`❌ Error: ${error.message}`, 'error');
+                    log(`Code: ${error.code}`, 'error');
+                    log(`Details: ${JSON.stringify(error, null, 2)}`, 'error');
+                } else {
+                    log(`✅ Success! Data: ${JSON.stringify(data, null, 2)}`, 'success');
+                    
+                    // Clean up
+                    await client.from('bookings').delete().eq('id', testReservation.id);
+                    log('Test record cleaned up', 'info');
+                }
+            } catch (e) {
+                log(`Exception: ${e.message}`, 'error');
+                log(`Stack: ${e.stack}`, 'error');
+            }
+        }
+        
+        // Auto-run on load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                log('Page loaded. Click "Run Full Diagnostic" to start.', 'info');
+            }, 500);
+        });
+    </script>
+</body>
+</html>
+

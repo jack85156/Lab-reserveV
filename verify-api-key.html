@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Supabase API Key</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #000;
+            margin-bottom: 20px;
+        }
+        .status-box {
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.9em;
+            border: 1px solid #e0e0e0;
+        }
+        button {
+            background: #000;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover {
+            background: #333;
+        }
+        .key-display {
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Supabase API Key Verification</h1>
+        
+        <div id="results"></div>
+        
+        <button onclick="verifyAPIKey()">Verify API Key</button>
+        <button onclick="testConnection()">Test Connection</button>
+        <button onclick="decodeJWT()">Decode JWT Token</button>
+    </div>
+    
+    <!-- Load Supabase configuration and library -->
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    
+    <script>
+        function showResult(message, type) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status-box ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        function verifyAPIKey() {
+            clearResults();
+            
+            const url = window.SUPABASE_URL;
+            const key = window.SUPABASE_ANON_KEY;
+            
+            showResult('<h3>Step 1: Configuration Check</h3>', 'info');
+            
+            if (!url) {
+                showResult('❌ ERROR: SUPABASE_URL is not set!', 'error');
+                return;
+            }
+            
+            if (!key) {
+                showResult('❌ ERROR: SUPABASE_ANON_KEY is not set!', 'error');
+                return;
+            }
+            
+            // Check if URL is placeholder
+            if (url.includes('your-project-id')) {
+                showResult('⚠️ WARNING: SUPABASE_URL is still a placeholder!', 'warning');
+                return;
+            }
+            
+            // Check if key is placeholder
+            if (key.includes('your-anon-key')) {
+                showResult('⚠️ WARNING: SUPABASE_ANON_KEY is still a placeholder!', 'warning');
+                return;
+            }
+            
+            // Check URL format
+            if (!url.startsWith('https://') || !url.includes('.supabase.co')) {
+                showResult('⚠️ WARNING: SUPABASE_URL format looks incorrect!<br>Expected: https://xxxxx.supabase.co', 'warning');
+            }
+            
+            // Check key format (JWT tokens have 3 parts separated by dots)
+            const keyParts = key.split('.');
+            if (keyParts.length !== 3) {
+                showResult('⚠️ WARNING: API Key format looks incorrect!<br>JWT tokens should have 3 parts separated by dots.', 'warning');
+            }
+            
+            showResult(`✅ SUPABASE_URL: <span class="key-display">${url}</span>`, 'success');
+            showResult(`✅ SUPABASE_ANON_KEY: <span class="key-display">${key.substring(0, 50)}...</span> (${key.length} characters)`, 'success');
+            
+            // Check key length (typical JWT tokens are 200+ characters)
+            if (key.length < 100) {
+                showResult('⚠️ WARNING: API Key seems too short. Typical JWT tokens are 200+ characters.', 'warning');
+            } else {
+                showResult(`✅ API Key length: ${key.length} characters (looks good)`, 'success');
+            }
+        }
+        
+        function decodeJWT() {
+            clearResults();
+            
+            const key = window.SUPABASE_ANON_KEY;
+            
+            if (!key) {
+                showResult('❌ ERROR: SUPABASE_ANON_KEY is not set!', 'error');
+                return;
+            }
+            
+            showResult('<h3>JWT Token Decode</h3>', 'info');
+            
+            try {
+                const parts = key.split('.');
+                if (parts.length !== 3) {
+                    showResult('❌ ERROR: Invalid JWT format. Should have 3 parts.', 'error');
+                    return;
+                }
+                
+                // Decode header (base64)
+                const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
+                showResult('<strong>Header:</strong><pre>' + JSON.stringify(header, null, 2) + '</pre>', 'info');
+                
+                // Decode payload (base64)
+                const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+                showResult('<strong>Payload:</strong><pre>' + JSON.stringify(payload, null, 2) + '</pre>', 'info');
+                
+                // Check important fields
+                if (payload.iss !== 'supabase') {
+                    showResult('⚠️ WARNING: Token issuer is not "supabase"', 'warning');
+                } else {
+                    showResult('✅ Token issuer: supabase (correct)', 'success');
+                }
+                
+                if (payload.role !== 'anon') {
+                    showResult('⚠️ WARNING: Token role is not "anon". Should be "anon" for public access.', 'warning');
+                } else {
+                    showResult('✅ Token role: anon (correct for public access)', 'success');
+                }
+                
+                if (payload.ref) {
+                    showResult(`✅ Project reference: ${payload.ref}`, 'success');
+                    
+                    // Check if ref matches URL
+                    const url = window.SUPABASE_URL;
+                    if (url && url.includes(payload.ref)) {
+                        showResult('✅ Project reference matches URL!', 'success');
+                    } else if (url) {
+                        showResult('⚠️ WARNING: Project reference in token does not match URL!', 'warning');
+                        showResult(`Token ref: ${payload.ref}<br>URL contains: ${url.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] || 'unknown'}`, 'warning');
+                    }
+                }
+                
+                // Check expiration
+                if (payload.exp) {
+                    const expDate = new Date(payload.exp * 1000);
+                    const now = new Date();
+                    if (expDate < now) {
+                        showResult(`❌ ERROR: Token has expired! Expired on: ${expDate.toLocaleString()}`, 'error');
+                    } else {
+                        showResult(`✅ Token is valid until: ${expDate.toLocaleString()}`, 'success');
+                    }
+                }
+                
+            } catch (error) {
+                showResult(`❌ ERROR decoding JWT: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testConnection() {
+            clearResults();
+            
+            showResult('<h3>Connection Test</h3>', 'info');
+            
+            const url = window.SUPABASE_URL;
+            const key = window.SUPABASE_ANON_KEY;
+            
+            if (!url || !key) {
+                showResult('❌ ERROR: Supabase credentials not configured!', 'error');
+                return;
+            }
+            
+            // Check if Supabase library is loaded
+            if (typeof window.supabase === 'undefined' || typeof window.supabase.createClient !== 'function') {
+                showResult('❌ ERROR: Supabase library not loaded!<br>Make sure the CDN script is included.', 'error');
+                return;
+            }
+            
+            try {
+                showResult('⏳ Creating Supabase client...', 'info');
+                const supabase = window.supabase.createClient(url, key);
+                
+                showResult('⏳ Testing connection to bookings table...', 'info');
+                
+                // Try a simple query
+                const { data, error } = await supabase
+                    .from('bookings')
+                    .select('count')
+                    .limit(1);
+                
+                if (error) {
+                    if (error.code === '42P01' || error.message.includes('does not exist')) {
+                        showResult('❌ ERROR: Table "bookings" does not exist!<br>Create it in Supabase Dashboard → SQL Editor.', 'error');
+                    } else if (error.code === '42501' || error.message.includes('permission denied')) {
+                        showResult('❌ ERROR: Permission denied!<br>Check Row Level Security (RLS) policies in Supabase Dashboard.', 'error');
+                    } else if (error.message.includes('JWT')) {
+                        showResult('❌ ERROR: Invalid API key!<br>The JWT token is not valid or has expired.', 'error');
+                    } else {
+                        showResult(`❌ ERROR: ${error.message}<br>Code: ${error.code || 'unknown'}`, 'error');
+                    }
+                } else {
+                    showResult('✅ SUCCESS: Connection works!<br>API key is valid and can access the database.', 'success');
+                }
+            } catch (error) {
+                if (error.message.includes('Failed to fetch')) {
+                    showResult('❌ ERROR: Network error - Failed to fetch<br>Possible causes:<br>- Table does not exist<br>- Network/firewall blocking<br>- Wrong URL', 'error');
+                } else {
+                    showResult(`❌ ERROR: ${error.message}`, 'error');
+                }
+            }
+        }
+        
+        // Auto-run verification on load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                verifyAPIKey();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
+

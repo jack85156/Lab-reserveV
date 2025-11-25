@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Test - Dr. V's Lab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #000;
+            margin-bottom: 20px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        button {
+            background: #000;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 5px 10px 0;
+        }
+        
+        button:hover {
+            background: #333;
+        }
+        
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.9em;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Supabase Connection Diagnostic Tool</h1>
+        <p>This tool will help you diagnose why Supabase isn't connecting.</p>
+        
+        <div class="test-section">
+            <h2>Step 1: Configuration Check</h2>
+            <div id="configStatus"></div>
+            <button onclick="checkConfiguration()">Check Configuration</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>Step 2: Library Loading Check</h2>
+            <div id="libraryStatus"></div>
+            <button onclick="checkLibrary()">Check Library</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>Step 3: Connection Test</h2>
+            <div id="connectionStatus"></div>
+            <button onclick="testConnection()">Test Connection</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>Step 4: Database Table Check</h2>
+            <div id="tableStatus"></div>
+            <button onclick="checkTable()">Check Table</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>Full Diagnostic Report</h2>
+            <button onclick="runFullDiagnostic()">Run All Tests</button>
+            <div id="fullReport" class="hidden" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+    
+    <!-- Load Supabase configuration and library -->
+    <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="storage.js"></script>
+    
+    <script>
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        function checkConfiguration() {
+            const url = window.SUPABASE_URL;
+            const key = window.SUPABASE_ANON_KEY;
+            
+            if (!url || !key) {
+                showStatus('configStatus', 
+                    '❌ ERROR: Supabase credentials not found!<br>' +
+                    'Make sure supabase-config.js is loaded and has your credentials.',
+                    'error');
+                return;
+            }
+            
+            if (url.includes('your-project-id') || key.includes('your-anon-key')) {
+                showStatus('configStatus',
+                    '⚠️ WARNING: Credentials are still placeholders!<br>' +
+                    'You need to replace the placeholder values in supabase-config.js with your actual Supabase credentials.<br>' +
+                    'Get them from: Supabase Dashboard → Settings → API',
+                    'warning');
+                return;
+            }
+            
+            showStatus('configStatus',
+                '✅ Configuration found!<br>' +
+                `URL: ${url.substring(0, 30)}...<br>` +
+                `Key: ${key.substring(0, 20)}... (hidden)`,
+                'success');
+        }
+        
+        function checkLibrary() {
+            // Check different ways Supabase might be exposed
+            let found = false;
+            let method = '';
+            
+            if (typeof window.supabase !== 'undefined') {
+                if (typeof window.supabase.createClient === 'function') {
+                    found = true;
+                    method = 'window.supabase.createClient';
+                } else if (window.supabase.default && typeof window.supabase.default.createClient === 'function') {
+                    found = true;
+                    method = 'window.supabase.default.createClient';
+                }
+            }
+            
+            if (!found && typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
+                found = true;
+                method = 'global supabase.createClient';
+            }
+            
+            if (found) {
+                showStatus('libraryStatus',
+                    `✅ Supabase library loaded!<br>Found via: ${method}`,
+                    'success');
+            } else {
+                showStatus('libraryStatus',
+                    '❌ ERROR: Supabase library not found!<br>' +
+                    'Make sure this script tag is in your HTML BEFORE storage.js:<br>' +
+                    '&lt;script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"&gt;&lt;/script&gt;',
+                    'error');
+            }
+        }
+        
+        async function testConnection() {
+            showStatus('connectionStatus', '⏳ Testing connection...', 'info');
+            
+            try {
+                const url = window.SUPABASE_URL;
+                const key = window.SUPABASE_ANON_KEY;
+                
+                if (!url || !key || url.includes('your-project-id') || key.includes('your-anon-key')) {
+                    showStatus('connectionStatus',
+                        '❌ Cannot test: Credentials not configured properly.',
+                        'error');
+                    return;
+                }
+                
+                // Try to create a Supabase client
+                let client = null;
+                if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+                    client = window.supabase.createClient(url, key);
+                } else if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
+                    client = supabase.createClient(url, key);
+                } else {
+                    showStatus('connectionStatus',
+                        '❌ Cannot test: Supabase library not loaded.',
+                        'error');
+                    return;
+                }
+                
+                // Try a simple query
+                const { data, error } = await client.from('bookings').select('count').limit(1);
+                
+                if (error) {
+                    showStatus('connectionStatus',
+                        `❌ Connection failed!<br>Error: ${error.message}<br><br>` +
+                        `Possible causes:<br>` +
+                        `- Table 'reservations' doesn't exist (run SQL to create it)<br>` +
+                        `- Wrong credentials<br>` +
+                        `- Network/firewall blocking connection`,
+                        'error');
+                } else {
+                    showStatus('connectionStatus',
+                        '✅ Connection successful!<br>Supabase is working correctly.',
+                        'success');
+                }
+            } catch (error) {
+                showStatus('connectionStatus',
+                    `❌ Connection test failed!<br>Error: ${error.message}`,
+                    'error');
+            }
+        }
+        
+        async function checkTable() {
+            showStatus('tableStatus', '⏳ Checking table...', 'info');
+            
+            try {
+                const url = window.SUPABASE_URL;
+                const key = window.SUPABASE_ANON_KEY;
+                
+                if (!url || !key || url.includes('your-project-id') || key.includes('your-anon-key')) {
+                    showStatus('tableStatus',
+                        '❌ Cannot check: Credentials not configured.',
+                        'error');
+                    return;
+                }
+                
+                let client = null;
+                if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+                    client = window.supabase.createClient(url, key);
+                } else if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
+                    client = supabase.createClient(url, key);
+                } else {
+                    showStatus('tableStatus',
+                        '❌ Cannot check: Supabase library not loaded.',
+                        'error');
+                    return;
+                }
+                
+                // Try to query the table
+                const { data, error } = await client.from('bookings').select('*').limit(1);
+                
+                if (error) {
+                    if (error.message.includes('does not exist') || error.code === '42P01') {
+                        showStatus('tableStatus',
+                            '❌ Table does not exist!<br><br>' +
+                            'You need to create the bookings table.<br>' +
+                            'Go to Supabase Dashboard → SQL Editor and run the SQL from SUPABASE_SETUP.md',
+                            'error');
+                    } else {
+                        showStatus('tableStatus',
+                            `❌ Error checking table: ${error.message}`,
+                            'error');
+                    }
+                } else {
+                    showStatus('tableStatus',
+                        '✅ Table exists and is accessible!<br>' +
+                        `Found ${data ? data.length : 0} test record(s).`,
+                        'success');
+                }
+            } catch (error) {
+                showStatus('tableStatus',
+                    `❌ Error: ${error.message}`,
+                    'error');
+            }
+        }
+        
+        async function runFullDiagnostic() {
+            const report = document.getElementById('fullReport');
+            report.classList.remove('hidden');
+            report.innerHTML = '<h3>Running full diagnostic...</h3><pre>Loading...</pre>';
+            
+            let results = [];
+            
+            // Test 1: Configuration
+            results.push('=== Configuration Check ===');
+            const url = window.SUPABASE_URL;
+            const key = window.SUPABASE_ANON_KEY;
+            
+            if (!url || !key) {
+                results.push('❌ FAIL: Credentials not found');
+            } else if (url.includes('your-project-id') || key.includes('your-anon-key')) {
+                results.push('❌ FAIL: Credentials are placeholders');
+            } else {
+                results.push('✅ PASS: Credentials configured');
+            }
+            
+            // Test 2: Library
+            results.push('\n=== Library Check ===');
+            let libFound = false;
+            if (typeof window.supabase !== 'undefined') {
+                libFound = true;
+                results.push('✅ PASS: Library loaded (window.supabase)');
+            } else if (typeof supabase !== 'undefined') {
+                libFound = true;
+                results.push('✅ PASS: Library loaded (global supabase)');
+            } else {
+                results.push('❌ FAIL: Library not found');
+            }
+            
+            // Test 3: Connection
+            if (libFound && url && key && !url.includes('your-project-id')) {
+                results.push('\n=== Connection Test ===');
+                try {
+                    let client = null;
+                    if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+                        client = window.supabase.createClient(url, key);
+                    } else if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
+                        client = supabase.createClient(url, key);
+                    }
+                    
+                    if (client) {
+                        const { error } = await client.from('bookings').select('count').limit(1);
+                        if (error) {
+                            results.push(`❌ FAIL: ${error.message}`);
+                        } else {
+                            results.push('✅ PASS: Connection successful');
+                        }
+                    }
+                } catch (error) {
+                    results.push(`❌ FAIL: ${error.message}`);
+                }
+            }
+            
+            report.innerHTML = '<h3>Diagnostic Report</h3><pre>' + results.join('\n') + '</pre>';
+        }
+        
+        // Auto-run configuration check on load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                checkConfiguration();
+                checkLibrary();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
+
