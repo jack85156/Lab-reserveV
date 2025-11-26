@@ -1,986 +1,1973 @@
 <!DOCTYPE html>
+
+
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>My Reservations - Dr. V's Lab</title>
+
     <style>
+
         * {
+
             margin: 0;
+
             padding: 0;
+
             box-sizing: border-box;
+
         }
+
         
+
         body {
+
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
             background: #ffffff;
+
             min-height: 100vh;
+
             padding: 20px;
+
         }
+
         
+
         .container {
+
             max-width: 1200px;
+
             margin: 0 auto;
+
             background: white;
+
             border-radius: 8px;
+
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
             overflow: hidden;
+
             border: 1px solid #e0e0e0;
+
         }
+
         
+
         header {
+
             background: #ffffff;
+
             color: #000000;
+
             padding: 40px;
+
             text-align: center;
+
             border-bottom: 2px solid #e0e0e0;
+
         }
+
         
+
         header h1 {
+
             font-size: 2.5em;
+
             margin-bottom: 10px;
+
         }
+
         
+
         nav {
+
             background: #f8f9fa;
+
             padding: 20px 40px;
+
             border-bottom: 2px solid #e9ecef;
+
         }
+
         
+
         nav ul {
+
             list-style: none;
+
             display: flex;
+
             flex-wrap: wrap;
+
             gap: 20px;
+
             justify-content: center;
+
         }
+
         
+
         nav a {
+
             text-decoration: none;
+
             color: #000000;
+
             font-weight: 600;
+
             padding: 12px 24px;
+
             border-radius: 4px;
+
             transition: all 0.3s;
+
             display: inline-block;
+
         }
+
         
+
         nav a:hover {
+
             background: #000000;
+
             color: white;
+
             transform: translateY(-1px);
+
         }
+
         
+
         main {
+
             padding: 40px;
+
         }
+
         
+
         .page-title {
+
             font-size: 2em;
+
             color: #000000;
+
             margin-bottom: 30px;
+
             text-align: center;
+
             font-weight: 700;
+
         }
+
         
+
         .reservations-list {
+
             display: flex;
+
             flex-direction: column;
+
             gap: 20px;
+
         }
+
         
+
         .reservation-card {
+
             background: #f8f9fa;
+
             border-radius: 15px;
+
             padding: 25px;
+
             border: 2px solid #e9ecef;
+
             transition: all 0.3s;
+
         }
+
         
+
         .reservation-card:hover {
+
             transform: translateY(-3px);
+
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+
             border-color: #000000;
+
         }
+
         
+
         .reservation-header {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             margin-bottom: 15px;
+
             flex-wrap: wrap;
+
             gap: 15px;
+
         }
+
         
+
         .reservation-header h3 {
+
             color: #000000;
+
             font-size: 1.5em;
+
         }
+
         
+
         .reservation-status {
+
             padding: 6px 12px;
+
             border-radius: 20px;
+
             font-size: 0.9em;
+
             font-weight: 600;
+
         }
+
         
+
         .status-confirmed {
+
             background: #d4edda;
+
             color: #155724;
+
         }
+
         
+
         .status-pending {
+
             background: #fff3cd;
+
             color: #856404;
+
         }
+
         
+
         .reservation-details {
+
             display: grid;
+
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+
             gap: 15px;
+
             margin-bottom: 15px;
+
         }
+
         
+
         .detail-item {
+
             color: #333333;
+
         }
+
         
+
         .detail-item strong {
+
             color: #000000;
+
             display: block;
+
             margin-bottom: 5px;
+
             font-weight: 700;
+
         }
+
         
+
         .reservation-actions {
+
             display: flex;
+
             gap: 10px;
+
             margin-top: 15px;
+
             flex-wrap: wrap;
+
         }
+
         
+
         .btn {
+
             padding: 10px 20px;
+
             border: none;
+
             border-radius: 8px;
+
             font-size: 0.95em;
+
             font-weight: 600;
+
             cursor: pointer;
+
             transition: all 0.3s;
+
         }
+
         
+
         .btn-view {
+
             background: #000000;
+
             color: white;
+
         }
+
         
+
         .btn-view:hover {
+
             background: #333333;
+
             transform: translateY(-1px);
+
         }
+
         
+
         .btn-cancel {
+
             background: #dc3545;
+
             color: white;
+
         }
+
         
+
         .btn-cancel:hover {
+
             background: #c82333;
+
             transform: translateY(-2px);
+
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+
         }
+
         
+
         .empty-state {
+
             text-align: center;
+
             padding: 60px 20px;
+
             color: #333333;
+
         }
+
         
+
         .empty-state h3 {
+
             font-size: 1.5em;
+
             margin-bottom: 15px;
+
             color: #000000;
+
             font-weight: 700;
+
         }
+
         
+
         .empty-state p {
+
             margin-bottom: 25px;
+
         }
+
         
+
         .name-search-box {
+
             text-align: center;
+
             padding: 40px 20px;
+
             max-width: 600px;
+
             margin: 0 auto;
+
         }
+
         
+
         .name-search-box h3 {
+
             color: #000000;
+
             font-size: 1.8em;
+
             margin-bottom: 15px;
+
             font-weight: 700;
+
         }
+
         
+
         .name-search-box p {
+
             color: #333333;
+
             font-size: 1.1em;
+
             margin-bottom: 20px;
+
             line-height: 1.6;
+
         }
+
         
+
         .btn-primary {
+
             background: #000000;
+
             color: white;
+
             padding: 12px 24px;
+
             border-radius: 4px;
+
             text-decoration: none;
+
             display: inline-block;
+
             font-weight: 600;
+
             transition: all 0.3s;
+
         }
+
         
+
         .btn-primary:hover {
+
             background: #333333;
+
             transform: translateY(-1px);
+
         }
+
         
+
         footer {
+
             background: #f8f9fa;
+
             padding: 30px;
+
             text-align: center;
+
             color: #666;
+
             border-top: 2px solid #e9ecef;
+
         }
+
         
+
         .selection-controls {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             padding: 15px 20px;
+
             background: #f8f9fa;
+
             border-radius: 8px;
+
             margin-bottom: 20px;
+
             flex-wrap: wrap;
+
             gap: 15px;
+
         }
+
         
+
         .selection-info {
+
             font-weight: 600;
+
             color: #000000;
+
         }
+
         
+
         .btn-cancel-selected {
+
             background: #dc3545;
+
             color: white;
+
             padding: 12px 24px;
+
             border: none;
+
             border-radius: 8px;
+
             font-weight: 600;
+
             cursor: pointer;
+
             transition: all 0.3s;
+
             font-size: 1em;
+
         }
+
         
+
         .btn-cancel-selected:hover:not(:disabled) {
+
             background: #c82333;
+
             transform: translateY(-1px);
+
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+
         }
+
         
+
         .btn-cancel-selected:disabled {
+
             background: #ccc;
+
             cursor: not-allowed;
+
             opacity: 0.6;
+
         }
+
         
+
         .cancellation-notice {
+
             background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+
             border-left: 4px solid #2196f3;
+
             border-radius: 8px;
+
             padding: 20px 25px;
+
             margin-bottom: 30px;
+
             display: flex;
+
             align-items: flex-start;
+
             gap: 15px;
+
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
             animation: fadeIn 0.3s ease-in;
+
         }
+
         
+
         @keyframes fadeIn {
+
             from {
+
                 opacity: 0;
+
                 transform: translateY(-10px);
+
             }
+
             to {
+
                 opacity: 1;
+
                 transform: translateY(0);
+
             }
+
         }
+
         
+
         .notice-icon {
+
             font-size: 1.8em;
+
             flex-shrink: 0;
+
             line-height: 1;
+
         }
+
         
+
         .notice-content {
+
             flex: 1;
+
             color: #1565c0;
+
             font-size: 1.05em;
+
             line-height: 1.6;
+
         }
+
         
+
         .notice-content strong {
+
             color: #0d47a1;
+
             font-weight: 700;
+
         }
+
         
+
         @media (max-width: 768px) {
+
             .cancellation-notice {
+
                 padding: 15px 20px;
+
                 flex-direction: column;
+
                 gap: 10px;
+
             }
+
             
+
             .notice-icon {
+
                 font-size: 1.5em;
+
             }
+
             
+
             .notice-content {
+
                 font-size: 0.95em;
+
             }
+
         }
+
         
+
         .reservation-card {
+
             position: relative;
+
         }
+
         
+
         .reservation-checkbox {
+
             position: absolute;
+
             bottom: 15px;
+
             right: 15px;
+
             width: 24px;
+
             height: 24px;
+
             cursor: pointer;
+
             z-index: 10;
+
         }
+
         
+
         .reservation-card.selected {
+
             border-color: #dc3545;
+
             background: #fff5f5;
+
         }
+
         
+
         .reservation-card.selected .reservation-checkbox {
+
             accent-color: #dc3545;
+
         }
+
     </style>
+
     <!-- Supabase Configuration -->
+
     <script src="supabase-config.js"></script>
+
     <!-- Supabase Client Library -->
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
     <!-- Storage abstraction (must come after Supabase) -->
+
     <script src="storage.js"></script>
+
     <script src="common.js"></script>
+
     <script>
+
         let currentSearchName = '';
+
         
+
         // Helper function to check if Storage is ready
+
         function isStorageReady() {
+
             return typeof Storage !== 'undefined' && Storage && typeof Storage.getReservations === 'function';
+
         }
+
         
+
         // Wait for Storage to be available (with timeout)
+
         function waitForStorage(maxWait = 2000) {
+
             return new Promise((resolve, reject) => {
+
                 if (isStorageReady()) {
+
                     resolve();
+
                     return;
+
                 }
+
                 
+
                 let elapsed = 0;
+
                 const checkInterval = 50;
+
                 const interval = setInterval(() => {
+
                     elapsed += checkInterval;
+
                     if (isStorageReady()) {
+
                         clearInterval(interval);
+
                         resolve();
+
                     } else if (elapsed >= maxWait) {
+
                         clearInterval(interval);
+
                         reject(new Error('Storage system not available. Please refresh the page.'));
+
                     }
+
                 }, checkInterval);
+
             });
+
         }
+
         
+
         function showNameInput() {
+
             // Hide the cancellation notice when showing name input
+
             const notice = document.getElementById('cancellation-notice');
+
             if (notice) {
+
                 notice.style.display = 'none';
+
             }
+
             
+
             const container = document.getElementById('reservations-container');
+
             container.innerHTML = `
+
                 <div class="name-search-box">
+
                     <h3>Enter Your Name</h3>
+
                     <p>Please enter the name you used when making your reservation:</p>
+
                     <div style="display: flex; gap: 10px; max-width: 500px; margin: 20px auto;">
+
                         <input type="text" id="searchNameInput" placeholder="Enter your name" style="flex: 1; padding: 12px; border: 2px solid #e9ecef; border-radius: 4px; font-size: 1em;">
+
                         <button id="searchButton" class="btn-primary" style="padding: 12px 24px;">Search</button>
+
                     </div>
+
                     <div id="searchErrorMsg" class="error-message" style="max-width: 500px; margin: 0 auto;"></div>
+
                 </div>
+
             `;
+
             
+
             // Focus on input and allow Enter key, also set up button click
+
             setTimeout(() => {
+
                 const input = document.getElementById('searchNameInput');
+
                 const searchButton = document.getElementById('searchButton');
+
                 
+
                 if (input) {
+
                     input.focus();
+
                     input.addEventListener('keypress', function(event) {
+
                         if (event.key === 'Enter') {
+
                             event.preventDefault();
+
                             searchReservations();
+
                         }
+
                     });
+
                 }
+
                 
+
                 // Add event listener to button
+
                 if (searchButton) {
+
                     searchButton.addEventListener('click', function(event) {
+
                         event.preventDefault();
+
                         searchReservations();
+
                     });
+
                 }
+
             }, 100);
+
         }
+
         
+
         async function searchReservations() {
+
             try {
+
                 const nameInput = document.getElementById('searchNameInput');
+
                 const errorMsg = document.getElementById('searchErrorMsg');
+
                 const searchButton = document.getElementById('searchButton');
+
                 
+
                 // Disable button and show loading state
+
                 if (searchButton) {
+
                     searchButton.disabled = true;
+
                     searchButton.textContent = 'Searching...';
+
                 }
+
                 
+
                 const enteredName = nameInput ? nameInput.value.trim() : '';
+
                 console.log('Entered name:', enteredName);
+
                 
+
                 // Clear previous error
+
                 if (errorMsg) {
+
                     errorMsg.classList.remove('show');
+
                     errorMsg.textContent = '';
+
                 }
+
                 
+
                 // Validate name
+
                 if (!enteredName) {
+
                     if (errorMsg) {
+
                         errorMsg.textContent = 'Please enter your name.';
+
                         errorMsg.classList.add('show');
+
                     }
+
                     if (nameInput) nameInput.focus();
+
                     if (searchButton) {
+
                         searchButton.disabled = false;
+
                         searchButton.textContent = 'Search';
+
                     }
+
                     return;
+
                 }
+
                 
+
                 // Store current search name
+
                 currentSearchName = enteredName;
+
                 
+
                 // Show loading state
+
                 const container = document.getElementById('reservations-container');
+
                 if (!container) {
+
                     console.error('Reservations container not found');
+
                     throw new Error('Page element not found. Please refresh the page.');
+
                 }
+
                 
+
                 container.innerHTML = '<div style="text-align: center; padding: 40px;"><p>Searching...</p></div>';
+
                 
+
                 // Load reservations for this name
+
                 try {
+
                     // Wait for Storage to be ready
+
                     await waitForStorage();
+
                     
+
                     // Load reservations
+
                     await loadReservations(enteredName);
+
                 } catch (error) {
+
                     console.error('Error searching reservations:', error);
+
                     const errorMessage = error.message || 'An error occurred while searching. Please try again.';
+
                     if (errorMsg) {
+
                         errorMsg.textContent = errorMessage;
+
                         errorMsg.classList.add('show');
+
                     }
+
                     if (container) {
+
                         container.innerHTML = `
+
                             <div class="empty-state">
+
                                 <h3>Error</h3>
+
                                 <p>${errorMessage}</p>
+
                                 <button onclick="showNameInput()" class="btn-primary" style="margin-top: 15px;">Try Again</button>
+
                                 <button onclick="location.reload()" class="btn-primary" style="margin-top: 15px; margin-left: 10px; background: #6c757d;">Refresh Page</button>
+
                             </div>
+
                         `;
+
                     }
+
                 } finally {
+
                     // Re-enable button
+
                     if (searchButton) {
+
                         searchButton.disabled = false;
+
                         searchButton.textContent = 'Search';
+
                     }
+
                 }
+
             } catch (error) {
+
                 console.error('Fatal error in searchReservations:', error);
+
                 const container = document.getElementById('reservations-container');
+
                 if (container) {
+
                     container.innerHTML = `
+
                         <div class="empty-state">
+
                             <h3>Fatal Error</h3>
+
                             <p>${error.message || 'An unexpected error occurred.'}</p>
+
                             <button onclick="location.reload()" class="btn-primary" style="margin-top: 15px;">Refresh Page</button>
+
                         </div>
+
                     `;
+
                 }
+
             }
+
         }
+
         
+
         async function loadReservations(searchName = null) {
+
             try {
+
                 const container = document.getElementById('reservations-container');
+
                 
+
                 if (!container) {
+
                     console.error('Reservations container not found');
+
                     throw new Error('Page element not found. Please refresh the page.');
+
                 }
+
                 
+
                 // Check if Storage API is available (should already be checked, but double-check for safety)
+
                 if (!isStorageReady()) {
+
                     console.error('Storage is not ready');
+
                     throw new Error('Storage system not available. Please refresh the page.');
+
                 }
+
                 
+
                 const reservations = await Storage.getReservations();
+
                 
+
                 // Ensure reservations is an array
+
                 if (!Array.isArray(reservations)) {
+
                     console.error('Reservations is not an array:', reservations);
+
                     throw new Error('Invalid reservations data. Please refresh the page.');
+
                 }
+
                 
+
                 // Filter by name if provided
+
                 let filteredReservations = reservations;
+
                 if (searchName) {
+
                     const normalizedSearch = searchName.toLowerCase().trim();
+
                     
+
                     filteredReservations = reservations.filter(r => {
+
                         // Handle cases where name might be null/undefined/empty
+
                         if (!r.name || !String(r.name).trim()) {
+
                             return false;
+
                         }
+
                         // Normalize both names for comparison (trim and lowercase)
+
                         // This handles both old (untrimmed) and new (trimmed) reservations
+
                         const normalizedReservationName = String(r.name).toLowerCase().trim();
+
                         return normalizedReservationName === normalizedSearch;
+
                     });
+
                 }
+
                 
+
                 if (filteredReservations.length === 0) {
+
                     // Hide the cancellation notice when no reservations
+
                     const notice = document.getElementById('cancellation-notice');
+
                     if (notice) {
+
                         notice.style.display = 'none';
+
                     }
+
                     
+
                     container.innerHTML = `
+
                         <div class="empty-state">
+
                             <h3>No Reservations Found</h3>
+
                             <p>${searchName ? `No reservations found for "${searchName}".` : 'You haven\'t made any reservations yet.'}</p>
+
                             <p style="color: #6c757d; font-size: 0.95em; margin-top: 10px;">
+
                                 <strong>Note:</strong> Please double-check your entry for any typos or case-sensitive differences.
+
                             </p>
+
                             ${searchName ? `<button onclick="showNameInput()" class="btn-primary" style="margin-top: 20px;">Search Different Name</button>` : ''}
+
                             <a href="make-reservation.html" class="btn-primary" style="margin-top: 20px; display: inline-block;">Make a Reservation</a>
+
                         </div>
+
                     `;
+
                     return;
+
                 }
+
                 
+
                 // Fallback functions if common.js functions are not available
+
                 function parseLocalDateFallback(dateString) {
+
                     if (typeof parseLocalDate === 'function') {
+
                         return parseLocalDate(dateString);
+
                     }
+
                     // Fallback: parse date manually
+
                     const [year, month, day] = dateString.split('-').map(Number);
+
                     return new Date(year, month - 1, day);
+
                 }
+
                 
+
                 function formatDateInCentralFallback(dateString) {
+
                     if (typeof formatDateInCentral === 'function') {
+
                         return formatDateInCentral(dateString);
+
                     }
+
                     // Fallback: format date manually in Central Time Zone
+
                     try {
+
                         const [year, month, day] = dateString.split('-').map(Number);
+
                         const date = new Date(year, month - 1, day);
+
                         return date.toLocaleDateString('en-US', {
+
                             timeZone: 'America/Chicago',
+
                             year: 'numeric',
+
                             month: 'long',
+
                             day: 'numeric'
+
                         });
+
                     } catch (error) {
+
                         console.error('Error formatting date:', error);
+
                         return dateString;
+
                     }
+
                 }
+
                 
+
                 // Sort by date (newest first)
+
                 filteredReservations.sort((a, b) => {
+
                     try {
+
                         const dateA = parseLocalDateFallback(a.date);
+
                         const dateB = parseLocalDateFallback(b.date);
+
                         const [hourA, minA] = (a.startTime || '00:00').split(':').map(Number);
+
                         const [hourB, minB] = (b.startTime || '00:00').split(':').map(Number);
+
                         dateA.setHours(hourA, minA);
+
                         dateB.setHours(hourB, minB);
+
                         return dateB - dateA;
+
                     } catch (error) {
+
                         console.error('Error sorting reservations:', error);
+
                         return 0; // Keep original order if sorting fails
+
                     }
+
                 });
+
                 
+
                 // Build reservation cards with error handling
+
                 const reservationCards = filteredReservations.map(reservation => {
+
                     try {
+
                     // Format date with error handling
+
                     let formattedDate = 'Date not available';
+
                     try {
+
                         formattedDate = formatDateInCentralFallback(reservation.date);
+
                     } catch (error) {
+
                         console.error('Error formatting date:', error, reservation);
+
                         // Last resort: simple date display
+
                         if (reservation.date) {
+
                             formattedDate = reservation.date;
+
                         }
+
                     }
+
                     
+
                     // Safely get reservation fields with fallbacks
+
                     const reservationName = reservation.name || 'Name not provided';
+
                     const reservationInstrument = reservation.instrument || 'Unknown Instrument';
+
                     const startTime = reservation.startTime || 'Time not specified';
+
                     const endTime = reservation.endTime || 'Time not specified';
+
                     const reservationId = reservation.id || '';
+
                     
+
                     return `
+
                         <div class="reservation-card" data-reservation-id="${reservationId}">
+
                             <input type="checkbox" class="reservation-checkbox" data-reservation-id="${reservationId}" onchange="updateSelectionControls()">
+
                             <div class="reservation-header">
+
                                 <h3>${reservationInstrument}</h3>
+
                                 <span class="reservation-status status-confirmed">Confirmed</span>
+
                             </div>
+
                             <div class="reservation-details">
+
                                 <div class="detail-item">
+
                                     <strong>Reserved By:</strong>
+
                                     ${reservationName}
+
                                 </div>
+
                                 <div class="detail-item">
+
                                     <strong>Date:</strong>
+
                                     ${formattedDate}
+
                                 </div>
+
                                 <div class="detail-item">
+
                                     <strong>Time:</strong>
+
                                     ${startTime} - ${endTime}
+
                                 </div>
+
                                 ${reservation.temperature ? `
+
                                 <div class="detail-item">
+
                                     <strong>Temperature:</strong>
+
                                     ${reservation.temperature}
+
                                 </div>
+
                                 ` : ''}
+
                                 ${reservation.purpose ? `
+
                                 <div class="detail-item">
+
                                     <strong>Purpose:</strong>
+
                                     ${reservation.purpose}
+
                                 </div>
+
                                 ` : ''}
+
                             </div>
+
                             <div class="reservation-actions">
+
                                 <button class="btn btn-view" onclick="viewDetails('${reservationId}')">View Details</button>
+
                             </div>
+
                         </div>
+
                     `;
+
                     } catch (error) {
+
                         console.error('Error formatting reservation:', error, reservation);
+
                         // Return a basic card even if formatting fails
+
                         return `
+
                             <div class="reservation-card">
+
                                 <div class="reservation-header">
+
                                     <h3>${reservation.instrument || 'Unknown Instrument'}</h3>
+
                                     <span class="reservation-status status-confirmed">Confirmed</span>
+
                                 </div>
+
                                 <div class="reservation-details">
+
                                     <div class="detail-item">
+
                                         <strong>Error:</strong> Could not display reservation details. ID: ${reservation.id || 'N/A'}
+
                                     </div>
+
                                 </div>
+
                             </div>
+
                         `;
+
                     }
+
                 }).join('');
+
                 
+
                 container.innerHTML = `
+
                 <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+
                     <strong>Showing reservations for: ${searchName}</strong>
+
                     <button onclick="showNameInput()" class="btn" style="margin-left: 15px; background: #6c757d; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer;">Search Different Name</button>
+
                 </div>
+
                 <div class="selection-controls" id="selection-controls" style="display: none;">
+
                     <div class="selection-info" id="selection-info">No reservations selected</div>
+
                     <button class="btn-cancel-selected" id="cancel-selected-btn" onclick="cancelSelectedReservations()" disabled>Cancel Selected</button>
+
                 </div>
+
                 ${reservationCards}
+
             `;
+
             
+
             // Show the cancellation notice when reservations are displayed
+
             const notice = document.getElementById('cancellation-notice');
+
             if (notice && filteredReservations.length > 0) {
+
                 notice.style.display = 'flex';
+
             }
+
             
+
             // Set up checkbox change handlers
+
             setTimeout(() => {
+
                 const checkboxes = document.querySelectorAll('.reservation-checkbox');
+
                 checkboxes.forEach(checkbox => {
+
                     checkbox.addEventListener('change', function() {
+
                         const card = this.closest('.reservation-card');
+
                         if (this.checked) {
+
                             card.classList.add('selected');
+
                         } else {
+
                             card.classList.remove('selected');
+
                         }
+
                         updateSelectionControls();
+
                     });
+
                 });
+
             }, 100);
+
             } catch (error) {
+
                 console.error('Error loading reservations:', error);
+
                 const container = document.getElementById('reservations-container');
+
                 if (container) {
+
                     container.innerHTML = `
+
                         <div class="empty-state">
+
                             <h3>Error Loading Reservations</h3>
+
                             <p>An error occurred: ${error.message}</p>
+
                             <button onclick="showNameInput()" class="btn-primary" style="margin-top: 15px;">Try Again</button>
+
                         </div>
+
                     `;
+
                 }
+
                 throw error; // Re-throw so searchReservations can catch it
+
             }
+
         }
+
         
+
         function updateSelectionControls() {
+
             const checkboxes = document.querySelectorAll('.reservation-checkbox:checked');
+
             const selectedCount = checkboxes.length;
+
             const controlsDiv = document.getElementById('selection-controls');
+
             const infoDiv = document.getElementById('selection-info');
+
             const cancelBtn = document.getElementById('cancel-selected-btn');
+
             
+
             if (selectedCount > 0) {
+
                 if (controlsDiv) controlsDiv.style.display = 'flex';
+
                 if (infoDiv) infoDiv.textContent = `${selectedCount} reservation${selectedCount > 1 ? 's' : ''} selected`;
+
                 if (cancelBtn) cancelBtn.disabled = false;
+
             } else {
+
                 if (controlsDiv) controlsDiv.style.display = 'none';
+
                 if (cancelBtn) cancelBtn.disabled = true;
+
             }
+
         }
+
         
+
         async function cancelSelectedReservations() {
+
             const checkboxes = document.querySelectorAll('.reservation-checkbox:checked');
+
             const selectedIds = Array.from(checkboxes).map(cb => cb.getAttribute('data-reservation-id'));
+
             
+
             if (selectedIds.length === 0) {
+
                 alert('No reservations selected.');
+
                 return;
+
             }
+
             
+
             // Confirm cancellation
+
             const confirmMessage = `Are you sure you want to cancel ${selectedIds.length} reservation${selectedIds.length > 1 ? 's' : ''}? This action cannot be undone.`;
+
             if (!confirm(confirmMessage)) {
+
                 return;
+
             }
+
             
+
             // Disable button during cancellation
+
             const cancelBtn = document.getElementById('cancel-selected-btn');
+
             if (cancelBtn) {
+
                 cancelBtn.disabled = true;
+
                 cancelBtn.textContent = 'Cancelling...';
+
             }
+
             
+
             let successCount = 0;
+
             let failCount = 0;
+
             
+
             // Cancel each selected reservation
+
             for (const id of selectedIds) {
+
                 try {
+
                     await Storage.deleteReservation(id);
+
                     successCount++;
+
                     
+
                     // Remove the card from view
+
                     const card = document.querySelector(`.reservation-card[data-reservation-id="${id}"]`);
+
                     if (card) {
+
                         card.style.opacity = '0.5';
+
                         card.style.transition = 'opacity 0.3s';
+
                         setTimeout(() => {
+
                             card.remove();
+
                             updateSelectionControls();
+
                         }, 300);
+
                     }
+
                 } catch (error) {
+
                     console.error(`Error cancelling reservation ${id}:`, error);
+
                     failCount++;
+
                 }
+
             }
+
             
+
             // Show result message
+
             if (successCount > 0 && failCount === 0) {
+
                 alert(`Successfully cancelled ${successCount} reservation${successCount > 1 ? 's' : ''}.`);
+
             } else if (successCount > 0 && failCount > 0) {
+
                 alert(`Cancelled ${successCount} reservation${successCount > 1 ? 's' : ''}, but ${failCount} failed. Please try again.`);
+
             } else {
+
                 alert(`Failed to cancel reservations. Please try again.`);
+
             }
+
             
+
             // Reload reservations to refresh the list
+
             if (successCount > 0) {
+
                 setTimeout(() => {
+
                     loadReservations(currentSearchName);
+
                 }, 500);
+
             }
+
             
+
             // Re-enable button
+
             if (cancelBtn) {
+
                 cancelBtn.disabled = false;
+
                 cancelBtn.textContent = 'Cancel Selected';
+
             }
+
         }
+
         
+
         async function viewDetails(id) {
+
             try {
+
                 const reservations = await Storage.getReservations();
+
                 const reservation = reservations.find(r => r.id === id);
+
                 if (reservation) {
+
                     localStorage.setItem('viewingReservation', JSON.stringify(reservation));
+
                     window.location.href = 'reservation-details.html';
+
                 } else {
+
                     alert('Reservation not found.');
+
                 }
+
             } catch (error) {
+
                 console.error('Error loading reservation:', error);
+
                 alert('Error loading reservation details. Please try again.');
+
             }
+
         }
+
         
+
         window.onload = function() {
+
             // Check if there's a name parameter in the URL
+
             const urlParams = new URLSearchParams(window.location.search);
+
             const nameParam = urlParams.get('name');
+
             
+
             if (nameParam) {
+
                 // Auto-search for this name
+
                 const container = document.getElementById('reservations-container');
+
                 if (container) {
+
                     container.innerHTML = `
+
                         <div class="name-search-box">
+
                             <h3>Enter Your Name</h3>
+
                             <p>Searching for: <strong>${nameParam}</strong></p>
+
                             <div style="display: flex; gap: 10px; max-width: 500px; margin: 20px auto;">
+
                                 <input type="text" id="searchNameInput" value="${nameParam}" style="flex: 1; padding: 12px; border: 2px solid #e9ecef; border-radius: 4px; font-size: 1em;">
+
                                 <button id="searchButton" class="btn-primary" style="padding: 12px 24px;">Search</button>
+
                             </div>
+
                             <div id="searchErrorMsg" class="error-message" style="max-width: 500px; margin: 0 auto;"></div>
+
                         </div>
+
                     `;
+
                     
+
                     // Set up event listeners and auto-search
+
                     setTimeout(() => {
+
                         const input = document.getElementById('searchNameInput');
+
                         const searchButton = document.getElementById('searchButton');
+
                         
+
                         if (input) {
+
                             input.focus();
+
                             input.addEventListener('keypress', function(event) {
+
                                 if (event.key === 'Enter') {
+
                                     event.preventDefault();
+
                                     searchReservations();
+
                                 }
+
                             });
+
                         }
+
                         
+
                         if (searchButton) {
+
                             searchButton.addEventListener('click', function(event) {
+
                                 event.preventDefault();
+
                                 searchReservations();
+
                             });
+
                         }
+
                         
+
                         // Auto-search after a short delay
+
                         setTimeout(() => {
+
                             searchReservations();
+
                         }, 100);
+
                     }, 100);
+
                 }
+
             } else {
+
                 // No name parameter, show normal name input
+
                 showNameInput();
+
             }
+
         };
+
     </script>
+
     <link rel="stylesheet" href="styles.css">
+
 </head>
+
 <body>
+
     <div class="container">
+
         <header>
+
             <h1>🥛 Dr. V's Lab</h1>
+
             <p>Instrument Reservation System</p>
+
         </header>
+
         
+
         <nav>
+
             <ul>
+
                 <li><a href="index.html">Home</a></li>
+
                 <li><a href="instruments.html">View Instruments</a></li>
+
                 <li><a href="make-reservation.html">Make Reservation</a></li>
+
                 <li><a href="view-reservations.html">My Reservations</a></li>
+
             </ul>
+
         </nav>
+
         
+
         <main>
+
             <h2 class="page-title">My Reservations</h2>
+
             
+
             <div id="cancellation-notice" class="cancellation-notice" style="display: none;">
+
                 <div class="notice-icon">ℹ️</div>
+
                 <div class="notice-content">
+
                     <strong>Notice:</strong> To cancel your reservations, simply select the time slot you'd like to remove. Once selected, the cancellation option will pop up right after.
+
                 </div>
+
             </div>
+
             
+
             <div id="reservations-container" class="reservations-list">
+
                 <!-- Reservations will be loaded here -->
+
             </div>
+
         </main>
+
         
+
         <footer>
+
             <p>&copy; 2025 Dr. V's Lab. All rights reserved.</p>
+
         </footer>
+
     </div>
+
     
+
 </body>
+
 </html>
+
 

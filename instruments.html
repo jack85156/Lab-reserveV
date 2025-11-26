@@ -1,761 +1,1541 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>View Instruments - Dr. V's Lab</title>
+
     <style>
+
         * {
+
             margin: 0;
+
             padding: 0;
+
             box-sizing: border-box;
+
         }
+
         
+
         body {
+
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
             background: #ffffff;
+
             min-height: 100vh;
+
             padding: 20px;
+
         }
+
         
+
         .container {
+
             max-width: 1200px;
+
             margin: 0 auto;
+
             background: white;
+
             border-radius: 8px;
+
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
             overflow: hidden;
+
             border: 1px solid #e0e0e0;
+
         }
+
         
+
         header {
+
             background: #ffffff;
+
             color: #000000;
+
             padding: 40px;
+
             border-bottom: 2px solid #e0e0e0;
+
             position: relative;
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             flex-wrap: wrap;
+
         }
+
         
+
         .header-content {
+
             text-align: left;
+
             flex: 1;
+
         }
+
         
+
         header h1 {
+
             font-size: 2.5em;
+
             margin-bottom: 10px;
+
         }
+
         
+
         header p {
+
             font-size: 1.2em;
+
             opacity: 0.9;
+
         }
+
         
+
         .clock-display {
+
             padding: 15px 30px;
+
             background: #f8f9fa;
+
             border: 2px solid #000000;
+
             border-radius: 8px;
+
             text-align: center;
+
             position: absolute;
+
             right: 40px;
+
             top: 50%;
+
             transform: translateY(-50%);
+
         }
+
         
+
         @media (max-width: 768px) {
+
             .clock-display {
+
                 position: static;
+
                 transform: none;
+
                 margin-top: 20px;
+
                 width: 100%;
+
             }
+
         }
+
         
+
         .clock-display .clock-label {
+
             font-size: 0.9em;
+
             color: #666;
+
             margin-bottom: 5px;
+
             font-weight: 600;
+
         }
+
         
+
         .clock-display .clock-time {
+
             font-size: 1.8em;
+
             color: #000000;
+
             font-weight: 700;
+
             font-family: 'Courier New', monospace;
+
         }
+
         
+
         .clock-display .clock-date {
+
             font-size: 1.1em;
+
             color: #333;
+
             margin-top: 5px;
+
         }
+
         
+
         nav {
+
             background: #f8f9fa;
+
             padding: 20px 40px;
+
             border-bottom: 2px solid #e9ecef;
+
         }
+
         
+
         nav ul {
+
             list-style: none;
+
             display: flex;
+
             flex-wrap: wrap;
+
             gap: 20px;
+
             justify-content: center;
+
         }
+
         
+
         nav a {
+
             text-decoration: none;
+
             color: #000000;
+
             font-weight: 600;
+
             padding: 12px 24px;
+
             border-radius: 4px;
+
             transition: all 0.3s;
+
             display: inline-block;
+
         }
+
         
+
         nav a:hover {
+
             background: #000000;
+
             color: white;
+
             transform: translateY(-1px);
+
         }
+
         
+
         main {
+
             padding: 40px;
+
         }
+
         
+
         .page-title {
+
             font-size: 2em;
+
             color: #000000;
+
             margin-bottom: 10px;
+
             text-align: center;
+
             font-weight: 700;
+
         }
+
         
+
         .page-subtitle {
+
             text-align: center;
+
             color: #666;
+
             margin-bottom: 40px;
+
             font-size: 1.1em;
+
         }
+
         
+
         .instrument-search-box {
+
             margin-bottom: 30px;
+
             padding: 0 20px;
+
         }
+
         
+
         .search-container {
+
             max-width: 600px;
+
             margin: 0 auto;
+
             position: relative;
+
             display: flex;
+
             align-items: center;
+
             gap: 10px;
+
         }
+
         
+
         .search-input {
+
             flex: 1;
+
             padding: 14px 20px;
+
             border: 2px solid #e9ecef;
+
             border-radius: 8px;
+
             font-size: 1.05em;
+
             transition: all 0.3s;
+
             background: #ffffff;
+
             color: #000000;
+
         }
+
         
+
         .search-input:focus {
+
             outline: none;
+
             border-color: #000000;
+
             box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+
         }
+
         
+
         .search-input::placeholder {
+
             color: #999;
+
         }
+
         
+
         .btn-clear {
+
             background: #6c757d;
+
             color: white;
+
             border: none;
+
             border-radius: 50%;
+
             width: 36px;
+
             height: 36px;
+
             cursor: pointer;
+
             font-size: 1.2em;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
             transition: all 0.3s;
+
             flex-shrink: 0;
+
         }
+
         
+
         .btn-clear:hover {
+
             background: #5a6268;
+
             transform: scale(1.1);
+
         }
+
         
+
         .no-results {
+
             text-align: center;
+
             padding: 60px 20px;
+
             color: #666;
+
         }
+
         
+
         .no-results h3 {
+
             font-size: 1.5em;
+
             margin-bottom: 15px;
+
             color: #000000;
+
         }
+
         
+
         .no-results p {
+
             font-size: 1.1em;
+
             margin-bottom: 20px;
+
         }
+
         
+
         .instruments-grid {
+
             display: grid;
+
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+
             gap: 25px;
+
             margin-top: 30px;
+
         }
+
         
+
         .instrument-card {
+
             background: #ffffff;
+
             border: 2px solid #e0e0e0;
+
             border-radius: 8px;
+
             padding: 25px;
+
             text-align: center;
+
             transition: all 0.3s;
+
             cursor: pointer;
+
             text-decoration: none;
+
             color: inherit;
+
             display: block;
+
         }
+
         
+
         .instrument-card:hover {
+
             border-color: #000000;
+
             transform: translateY(-5px);
+
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+
         }
+
         
+
         .instrument-icon {
+
             width: 260px;
+
             height: 260px;
+
             margin: 0 auto 25px;
+
             object-fit: contain;
+
             display: block;
+
             max-width: 100%;
+
         }
+
         
+
         .instrument-category {
+
             font-size: 0.85em;
+
             font-weight: 600;
+
             color: #666;
+
             margin-bottom: 8px;
+
             text-transform: uppercase;
+
             letter-spacing: 0.5px;
+
         }
+
         
+
         .instrument-name {
+
             font-size: 1.2em;
+
             font-weight: 700;
+
             color: #000000;
+
             margin-bottom: 10px;
+
         }
+
         
+
         .instrument-status {
+
             display: inline-block;
+
             padding: 6px 12px;
+
             border-radius: 20px;
+
             font-size: 0.9em;
+
             font-weight: 600;
+
             margin-top: 10px;
+
         }
+
         
+
         .status-available {
+
             background: #d4edda;
+
             color: #155724;
+
         }
+
         
+
         .status-busy {
+
             background: #f8d7da;
+
             color: #721c24;
+
         }
+
         
+
         .status-unknown {
+
             background: #d1ecf1;
+
             color: #0c5460;
+
         }
+
         
+
         .action-buttons {
+
             margin-top: 15px;
+
             display: flex;
+
             gap: 10px;
+
             justify-content: center;
+
         }
+
         
+
         .btn {
+
             padding: 10px 20px;
+
             border: none;
+
             border-radius: 4px;
+
             font-weight: 600;
+
             text-decoration: none;
+
             display: inline-block;
+
             transition: all 0.3s;
+
             cursor: pointer;
+
             font-size: 0.9em;
+
         }
+
         
+
         .btn-primary {
+
             background: #000000;
+
             color: white;
+
         }
+
         
+
         .btn-primary:hover {
+
             background: #333333;
+
             transform: translateY(-1px);
+
         }
+
         
+
         .btn-secondary {
+
             background: #f8f9fa;
+
             color: #000000;
+
             border: 2px solid #000000;
+
         }
+
         
+
         .btn-secondary:hover {
+
             background: #000000;
+
             color: white;
+
         }
+
         
+
         .loading {
+
             text-align: center;
+
             padding: 40px;
+
             color: #666;
+
         }
+
         
+
         footer {
+
             background: #f8f9fa;
+
             padding: 30px 40px;
+
             text-align: center;
+
             border-top: 2px solid #e9ecef;
+
             color: #666;
+
         }
+
         
+
         /* Responsive adjustments for instrument icons */
+
         @media (max-width: 768px) {
+
             .instrument-icon {
+
                 width: 220px;
+
                 height: 220px;
+
             }
+
             
+
             .instrument-search-box {
+
                 padding: 0 10px;
+
             }
+
             
+
             .search-input {
+
                 font-size: 1em;
+
                 padding: 12px 16px;
+
             }
+
         }
+
         
+
         @media (max-width: 480px) {
+
             .instrument-icon {
+
                 width: 180px;
+
                 height: 180px;
+
             }
+
             
+
             .search-container {
+
                 gap: 8px;
+
             }
+
             
+
             .btn-clear {
+
                 width: 32px;
+
                 height: 32px;
+
                 font-size: 1em;
+
             }
+
         }
+
     </style>
+
 </head>
+
 <body>
+
     <div class="container">
+
         <header>
+
             <div class="header-content">
+
                 <h1>🥛 Dr. V's Lab</h1>
+
                 <p>Instrument Reservation System</p>
+
             </div>
+
             <div class="clock-display">
+
                 <div class="clock-label">Central Time (US)</div>
+
                 <div class="clock-time" id="clockTime">--:--:--</div>
+
                 <div class="clock-date" id="clockDate">-- --, ----</div>
+
             </div>
+
         </header>
+
         
+
         <nav>
+
             <ul>
+
                 <li><a href="index.html">Home</a></li>
+
                 <li><a href="instruments.html">View Instruments</a></li>
+
                 <li><a href="make-reservation.html">Make Reservation</a></li>
+
                 <li><a href="view-reservations.html">My Reservations</a></li>
+
             </ul>
+
         </nav>
+
         
+
         <main>
+
             <div class="instrument-search-box">
+
                 <div class="search-container">
+
                     <input type="text" id="instrumentSearchInput" placeholder="Search instruments by name..." class="search-input">
+
                     <button id="clearSearchBtn" class="btn-clear" style="display: none;" onclick="clearSearch()">✕</button>
+
                 </div>
+
             </div>
+
             
+
             <h2 class="page-title">Available Instruments</h2>
+
             <p class="page-subtitle">Click on an instrument to check availability and make a reservation</p>
+
             
+
             <div id="instruments-container" class="loading">
+
                 Loading instruments...
+
             </div>
+
         </main>
+
         
+
         <footer>
+
             <p>&copy; 2025 Dr. V's Lab. All rights reserved.</p>
+
         </footer>
+
     </div>
+
     
+
     <!-- Supabase Configuration -->
+
     <script src="supabase-config.js"></script>
+
     <!-- Supabase Client Library -->
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
     <!-- Storage abstraction (must come after Supabase) -->
+
     <script src="storage.js"></script>
+
     <!-- Common utilities -->
+
     <script src="common.js"></script>
+
     
+
     <script>
+
         // Clock functionality
+
         function updateClock() {
+
             const now = new Date();
+
             const centralTime = new Date(now.toLocaleString("en-US", {timeZone: "America/Chicago"}));
+
             
+
             const hours = String(centralTime.getHours()).padStart(2, '0');
+
             const minutes = String(centralTime.getMinutes()).padStart(2, '0');
+
             const seconds = String(centralTime.getSeconds()).padStart(2, '0');
+
             
+
             document.getElementById('clockTime').textContent = `${hours}:${minutes}:${seconds}`;
+
             
+
             const options = { month: 'long', day: 'numeric', year: 'numeric' };
+
             document.getElementById('clockDate').textContent = centralTime.toLocaleDateString('en-US', options);
+
         }
+
         
+
         updateClock();
+
         setInterval(updateClock, 1000);
+
         
+
         // Instrument definitions with icon paths - ordered to match reservation page grouping
+
         const instruments = [
+
             // Particle Analysis
+
             {
+
                 name: 'Mastersizer',
+
                 icon: 'mastersizer-icon.JPEG',
+
                 category: 'Particle Analysis'
+
             },
+
             {
+
                 name: 'Zetasizer Ultra',
+
                 icon: 'zetasizer-ultra-icon.JPEG',
+
                 category: 'Particle Analysis'
+
             },
+
             {
+
                 name: 'Zetasizer Nano ZS',
+
                 icon: 'zetasizer-nano-icon.JPEG',
+
                 category: 'Particle Analysis'
+
             },
+
             // Particle Size Reduction
+
             {
+
                 name: 'Chem-Grade IKA Ultra-Turrax T25 Homogenizer',
+
                 icon: 'homogenizer-icon.JPEG',
+
                 category: 'Particle Size Reduction'
+
             },
+
             {
+
                 name: 'Chem-Grade SONICS Ultrasonic Extractor',
+
                 icon: 'sonicator-icon.JPEG',
+
                 category: 'Particle Size Reduction'
+
             },
+            {
+
+                name: 'Food-Grade IKA Ultra-Turrax T25 Homogenizer',
+
+                icon: 'Food-grade-homogenizer-icon.JPEG',
+
+                category: 'Particle Size Reduction'
+
+            },
+            {
+
+                name: 'Food-Grade SONICS Ultrasonic Extractor',
+
+                icon: 'Food-grade-sonicator-icon.JPEG',
+
+                category: 'Particle Size Reduction'
+
+            },
+
             // Rheology
+
             {
+
                 name: 'Kinexus Rheometer',
+
                 icon: 'Kinexus Rheometer-icon.JPEG',
+
                 category: 'Rheology'
+
             },
+
             {
+
                 name: 'Anton Paar Rheometer',
+
                 icon: 'Anton-Paar Rheometer-icon.JPEG',
+
                 category: 'Rheology'
+
             },
+
             // Temperature Control
+
             {
+
                 name: 'Chem-Grade Water Bath',
+
                 icon: 'chem-grade-water bath-icon.JPEG',
+
                 category: 'Temperature Control'
+
             },
+
             {
+
                 name: 'Food-Grade Water Bath',
+
                 icon: 'Food-grade-water bath-icon.JPEG',
+
                 category: 'Temperature Control'
+
             },
+
             // Separation
+
             {
+
                 name: 'Food-Grade Benchtop Centrifuge',
+
                 icon: 'Food-grade benchtop- centrifuge-icon.JPEG',
+
                 category: 'Separation'
+
             },
+
             // Material Testing
+
             {
+
                 name: 'Texture Analyzer',
+
                 icon: 'Texture-analyzer-icon.JPEG',
+
                 category: 'Material Testing'
+
             },
+
             // Preservation
+
             {
+
                 name: 'Food-Grade Freeze Dryer',
+
                 icon: 'freeze-dryer-icon.JPEG',
+
                 category: 'Preservation'
+
             },
+
             // Extraction
+
             {
+
                 name: 'Velp Automatic Solvent Extractor',
+
                 icon: 'velp-extractor-icon.JPEG',
+
                 category: 'Extraction'
+
             }
+
         ];
+
         
+
         // Store all instruments data for filtering
+
         let allInstrumentsData = [];
+
         let allReservations = [];
+
         let instrumentsWithReservations = new Set();
+
         
+
         // Filter instruments based on search query
+
         function filterInstruments(searchQuery) {
+
             const container = document.getElementById('instruments-container');
+
             const clearBtn = document.getElementById('clearSearchBtn');
+
             
+
             // Show/hide clear button
+
             if (searchQuery && searchQuery.trim().length > 0) {
+
                 clearBtn.style.display = 'flex';
+
             } else {
+
                 clearBtn.style.display = 'none';
+
             }
+
             
+
             // Filter instruments
+
             const query = (searchQuery || '').toLowerCase().trim();
+
             const filteredInstruments = query === '' 
+
                 ? allInstrumentsData 
+
                 : allInstrumentsData.filter(instrument => {
+
                     const nameMatch = instrument.name.toLowerCase().includes(query);
+
                     const categoryMatch = instrument.category.toLowerCase().includes(query);
+
                     return nameMatch || categoryMatch;
+
                 });
+
             
+
             // Render filtered instruments
+
             if (filteredInstruments.length === 0) {
+
                 container.className = '';
+
                 container.innerHTML = `
+
                     <div class="no-results">
+
                         <h3>No Instruments Found</h3>
+
                         <p>No instruments match your search "${searchQuery}".</p>
+
                         <p style="color: #6c757d; font-size: 0.95em; margin-top: 10px;">
+
                             Try searching by instrument name or category.
+
                         </p>
+
                     </div>
+
                 `;
+
                 return;
+
             }
+
             
+
             container.className = 'instruments-grid';
+
             container.innerHTML = filteredInstruments.map(instrument => {
+
                 const hasReservation = instrumentsWithReservations.has(instrument.name);
+
                 const statusClass = hasReservation ? 'status-busy' : 'status-available';
+
                 const statusText = hasReservation ? 'Busy Today' : 'Available today';
+
                 
+
                 // Check if icon file exists, use a default if not
+
                 const iconPath = instrument.icon || '🔬';
+
                 const iconHtml = iconPath.endsWith('.JPEG') || iconPath.endsWith('.jpg') || iconPath.endsWith('.png') 
+
                     ? `<img src="${iconPath}" alt="${instrument.name}" class="instrument-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+
                        <div style="display:none; font-size: 3em;">🔬</div>`
+
                     : `<div style="font-size: 3em;">${iconPath}</div>`;
+
                 
+
                 return `
+
                     <a href="check-availability.html?instrument=${encodeURIComponent(instrument.name)}" class="instrument-card">
+
                         ${iconHtml}
+
                         <div class="instrument-category">${instrument.category}</div>
+
                         <div class="instrument-name">${instrument.name}</div>
+
                         <div class="instrument-status ${statusClass}">${statusText}</div>
+
                         <div class="action-buttons">
+
                             <span class="btn btn-primary">Check Availability</span>
+
                         </div>
+
                     </a>
+
                 `;
+
             }).join('');
+
         }
+
         
+
         // Clear search function
+
         function clearSearch() {
+
             const searchInput = document.getElementById('instrumentSearchInput');
+
             if (searchInput) {
+
                 searchInput.value = '';
+
                 filterInstruments('');
+
                 searchInput.focus();
+
             }
+
         }
+
         
+
         // Load instruments and their availability status
+
         async function loadInstruments() {
+
             const container = document.getElementById('instruments-container');
+
             
+
             try {
+
                 // Get all reservations to check availability
+
                 if (typeof Storage !== 'undefined' && Storage && typeof Storage.getReservations === 'function') {
+
                     allReservations = await Storage.getReservations();
+
                 } else {
+
                     // Fallback to localStorage
+
                     const stored = localStorage.getItem('reservations');
+
                     if (stored) {
+
                         allReservations = JSON.parse(stored);
+
                     }
+
                 }
+
                 
+
                 // Get today's date in YYYY-MM-DD format (using Central Time)
+
                 const now = new Date();
+
                 const todayCentralStr = now.toLocaleString('en-US', {
+
                     timeZone: 'America/Chicago',
+
                     year: 'numeric',
+
                     month: '2-digit',
+
                     day: '2-digit'
+
                 });
+
                 // Parse Central Time date: "MM/DD/YYYY"
+
                 const [month, day, year] = todayCentralStr.split('/').map(Number);
+
                 const todayStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
                 
+
                 // Check which instruments have non-expired reservations TODAY ONLY
+
                 // Important: Only TODAY's reservations count for "Busy Today" status
+
                 // Future reservations (tomorrow, next week, etc.) do NOT make an instrument "Busy Today"
+
                 const activeTodayReservations = allReservations.filter(r => {
+
                     // CRITICAL: Must be for TODAY - future dates are excluded
+
                     if (r.date !== todayStr) {
+
                         return false; // Skip future or past dates
+
                     }
+
                     // Must not be expired (end time hasn't passed)
+
                     if (typeof Storage !== 'undefined' && Storage && typeof Storage.isReservationExpired === 'function') {
+
                         return !Storage.isReservationExpired(r);
+
                     }
+
                     // Fallback: if Storage.isReservationExpired is not available, check manually using Central Time
+
                     try {
+
                         if (!r.endTime) return true; // No end time, assume active
+
                         const [year, month, day] = r.date.split('-').map(Number);
+
                         const [endHour, endMinute] = r.endTime.split(':').map(Number);
+
                         
+
                         // Get current time in Central Time
+
                         const now = new Date();
+
                         const nowCentralStr = now.toLocaleString('en-US', {
+
                             timeZone: 'America/Chicago',
+
                             year: 'numeric',
+
                             month: '2-digit',
+
                             day: '2-digit',
+
                             hour: '2-digit',
+
                             minute: '2-digit',
+
                             second: '2-digit',
+
                             hour12: false
+
                         });
+
                         
+
                         // Parse current Central Time: "MM/DD/YYYY, HH:MM:SS"
+
                         const [nowDatePart, nowTimePart] = nowCentralStr.split(', ');
+
                         const [nowMonth, nowDay, nowYear] = nowDatePart.split('/').map(Number);
+
                         const [nowHour, nowMinute] = nowTimePart.split(':').map(Number);
+
                         
+
                         // Compare date and time in Central Time
+
                         const reservationTime = parseInt(`${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}${String(endHour).padStart(2, '0')}${String(endMinute).padStart(2, '0')}`);
+
                         const currentTime = parseInt(`${nowYear}${String(nowMonth).padStart(2, '0')}${String(nowDay).padStart(2, '0')}${String(nowHour).padStart(2, '0')}${String(nowMinute).padStart(2, '0')}`);
+
                         
+
                         // Reservation is active if end time hasn't passed (comparing in Central Time)
+
                         return reservationTime >= currentTime;
+
                     } catch (e) {
+
                         return true; // On error, assume active
+
                     }
+
                 });
+
                 
+
                 // Only instruments with active reservations TODAY will show "Busy Today"
+
                 // Instruments with only future reservations will show "Available today"
+
                 instrumentsWithReservations = new Set(activeTodayReservations.map(r => r.instrument));
+
                 
+
                 // Store all instruments data
+
                 allInstrumentsData = instruments;
+
                 
+
                 // Render instrument cards (initially show all)
+
                 if (instruments.length === 0) {
+
                     container.innerHTML = '<p>No instruments available.</p>';
+
                     return;
+
                 }
+
                 
+
                 // Initial render with all instruments
+
                 filterInstruments('');
+
                 
+
             } catch (error) {
+
                 console.error('Error loading instruments:', error);
+
                 container.innerHTML = `
+
                     <div style="text-align: center; padding: 40px;">
+
                         <p style="color: #721c24; margin-bottom: 20px;">Error loading instruments: ${error.message}</p>
+
                         <p>Showing instruments without availability status...</p>
+
                     </div>
+
                 `;
+
                 
+
                 // Fallback: show instruments without availability check
+
                 allInstrumentsData = instruments;
+
                 container.className = 'instruments-grid';
+
                 container.innerHTML = instruments.map(instrument => {
+
                     const iconPath = instrument.icon || '🔬';
+
                     const iconHtml = iconPath.endsWith('.JPEG') || iconPath.endsWith('.jpg') || iconPath.endsWith('.png') 
+
                         ? `<img src="${iconPath}" alt="${instrument.name}" class="instrument-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+
                            <div style="display:none; font-size: 3em;">🔬</div>`
+
                         : `<div style="font-size: 3em;">${iconPath}</div>`;
+
                     
+
                     return `
+
                         <a href="check-availability.html?instrument=${encodeURIComponent(instrument.name)}" class="instrument-card">
+
                             ${iconHtml}
+
                             <div class="instrument-category">${instrument.category}</div>
+
                             <div class="instrument-name">${instrument.name}</div>
+
                             <div class="instrument-status status-unknown">Status Unknown</div>
+
                             <div class="action-buttons">
+
                                 <span class="btn btn-primary">Check Availability</span>
+
                             </div>
+
                         </a>
+
                     `;
+
                 }).join('');
+
             }
+
         }
+
         
+
         // Load instruments when page loads
+
         window.addEventListener('DOMContentLoaded', () => {
+
             loadInstruments();
+
             
+
             // Set up search input event listener
+
             const searchInput = document.getElementById('instrumentSearchInput');
+
             if (searchInput) {
+
                 // Real-time search as user types
+
                 searchInput.addEventListener('input', function() {
+
                     filterInstruments(this.value);
+
                 });
+
                 
+
                 // Allow Enter key to focus (optional)
+
                 searchInput.addEventListener('keypress', function(event) {
+
                     if (event.key === 'Enter') {
+
                         event.preventDefault();
+
                         // Search is already handled by input event
+
                     }
+
                 });
+
             }
+
         });
+
     </script>
+
 </body>
+
 </html>
+
+

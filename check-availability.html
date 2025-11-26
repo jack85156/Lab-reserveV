@@ -1,577 +1,1153 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Check Availability - Dr. V's Lab</title>
+
     <style>
+
         * {
+
             margin: 0;
+
             padding: 0;
+
             box-sizing: border-box;
+
         }
+
         
+
         body {
+
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
             background: #ffffff;
+
             min-height: 100vh;
+
             padding: 20px;
+
         }
+
         
+
         .container {
+
             max-width: 1200px;
+
             margin: 0 auto;
+
             background: white;
+
             border-radius: 8px;
+
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
             overflow: hidden;
+
             border: 1px solid #e0e0e0;
+
         }
+
         
+
         header {
+
             background: #ffffff;
+
             color: #000000;
+
             padding: 40px;
+
             text-align: center;
+
             border-bottom: 2px solid #e0e0e0;
+
         }
+
         
+
         header h1 {
+
             font-size: 2.5em;
+
             margin-bottom: 10px;
+
         }
+
         
+
         nav {
+
             background: #f8f9fa;
+
             padding: 20px 40px;
+
             border-bottom: 2px solid #e9ecef;
+
         }
+
         
+
         nav ul {
+
             list-style: none;
+
             display: flex;
+
             flex-wrap: wrap;
+
             gap: 20px;
+
             justify-content: center;
+
         }
+
         
+
         nav a {
+
             text-decoration: none;
+
             color: #000000;
+
             font-weight: 600;
+
             padding: 12px 24px;
+
             border-radius: 4px;
+
             transition: all 0.3s;
+
             display: inline-block;
+
         }
+
         
+
         nav a:hover {
+
             background: #000000;
+
             color: white;
+
             transform: translateY(-1px);
+
         }
+
         
+
         main {
+
             padding: 40px;
+
         }
+
         
+
         .page-title {
+
             font-size: 2em;
+
             color: #000000;
+
             margin-bottom: 10px;
+
             text-align: center;
+
             font-weight: 700;
+
         }
+
         
+
         .instrument-name {
+
             font-size: 1.5em;
+
             color: #000000;
+
             text-align: center;
+
             margin-bottom: 30px;
+
             font-weight: 700;
+
         }
+
         
+
         .availability-info {
+
             background: #f8f9fa;
+
             border-left: 4px solid #000000;
+
             padding: 15px;
+
             border-radius: 4px;
+
             margin-bottom: 30px;
+
             text-align: center;
+
         }
+
         
+
         .availability-info p {
+
             color: #000000;
+
             line-height: 1.6;
+
         }
+
         
+
         .reservations-calendar {
+
             display: grid;
+
             gap: 20px;
+
         }
+
         
+
         .date-group {
+
             background: #f8f9fa;
+
             border-radius: 15px;
+
             padding: 25px;
+
             border: 2px solid #e9ecef;
+
         }
+
         
+
         .date-header {
+
             color: #000000;
+
             font-size: 1.3em;
+
             font-weight: 700;
+
             margin-bottom: 20px;
+
             padding-bottom: 10px;
+
             border-bottom: 2px solid #e9ecef;
+
         }
+
         
+
         .time-slots {
+
             display: flex;
+
             flex-direction: column;
+
             gap: 15px;
+
         }
+
         
+
         .time-slot {
+
             background: white;
+
             padding: 15px;
+
             border-radius: 4px;
+
             border-left: 4px solid #000000;
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             flex-wrap: wrap;
+
             gap: 10px;
+
         }
+
         
+
         .time-slot-info {
+
             flex: 1;
+
         }
+
         
+
         .time-slot-time {
+
             font-size: 1.1em;
+
             font-weight: 700;
+
             color: #000000;
+
             margin-bottom: 5px;
+
         }
+
         
+
         .time-slot-name {
+
             color: #333333;
+
             font-size: 0.95em;
+
         }
+
         
+
         .btn-cancel-small {
+
             background: #dc3545;
+
             color: white;
+
             border: none;
+
             padding: 6px 12px;
+
             border-radius: 4px;
+
             font-size: 0.85em;
+
             font-weight: 600;
+
             cursor: pointer;
+
             transition: all 0.3s;
+
         }
+
         
+
         .btn-cancel-small:hover {
+
             background: #c82333;
+
             transform: translateY(-1px);
+
         }
+
         
+
         .reserved-badge {
+
             background: #fff3cd;
+
             color: #856404;
+
             padding: 6px 12px;
+
             border-radius: 20px;
+
             font-size: 0.9em;
+
             font-weight: 600;
+
         }
+
         
+
         .empty-state {
+
             text-align: center;
+
             padding: 60px 20px;
+
             color: #333333;
+
         }
+
         
+
         .empty-state h3 {
+
             font-size: 1.5em;
+
             margin-bottom: 15px;
+
             color: #000000;
+
             font-weight: 700;
+
         }
+
         
+
         .empty-state p {
+
             margin-bottom: 25px;
+
         }
+
         
+
         .btn-primary {
+
             background: #000000;
+
             color: white;
+
             padding: 12px 24px;
+
             border-radius: 4px;
+
             text-decoration: none;
+
             display: inline-block;
+
             font-weight: 600;
+
             transition: all 0.3s;
+
         }
+
         
+
         .btn-primary:hover {
+
             background: #333333;
+
             transform: translateY(-1px);
+
         }
+
         
+
         footer {
+
             background: #f8f9fa;
+
             padding: 30px;
+
             text-align: center;
+
             color: #666;
+
             border-top: 2px solid #e9ecef;
+
         }
+
     </style>
+
     <!-- Supabase Configuration -->
+
     <script src="supabase-config.js"></script>
+
     <!-- Supabase Client Library -->
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
     <!-- Storage abstraction (must come after Supabase) -->
+
     <script src="storage.js"></script>
+
     <script src="common.js"></script>
+
     <script>
+
         // Function to fix reservations with missing names
+
         async function fixReservationsWithoutNames() {
+
             try {
+
                 const reservations = await Storage.getReservations();
+
                 const reservationsToFix = reservations.filter(r => !r.name || !r.name.trim());
+
                 
+
                 if (reservationsToFix.length > 0) {
+
                     console.warn(`Found ${reservationsToFix.length} reservations without names. These cannot be fixed automatically.`);
+
                     // Note: We can't automatically fix these because we don't know what the name should be
+
                     // The user would need to cancel and rebook with a name
+
                 }
+
                 
+
                 return reservationsToFix;
+
             } catch (error) {
+
                 console.error('Error checking for reservations without names:', error);
+
                 return [];
+
             }
+
         }
+
         
+
         async function loadAvailability() {
+
             try {
+
                 const urlParams = new URLSearchParams(window.location.search);
+
                 const instrument = urlParams.get('instrument');
+
                 
+
                 if (!instrument) {
+
                     document.getElementById('availability-container').innerHTML = `
+
                         <div class="empty-state">
+
                             <h3>No Instrument Specified</h3>
+
                             <p>Please select an instrument to check availability.</p>
+
                             <a href="instruments.html" class="btn-primary">View Instruments</a>
+
                         </div>
+
                     `;
+
                     return;
+
                 }
+
                 
+
                 document.querySelector('.instrument-name').textContent = instrument;
+
                 
+
                 // Update make reservation link
+
                 const makeReservationLink = document.getElementById('make-reservation-link');
+
                 if (makeReservationLink) {
+
                     makeReservationLink.href = `make-reservation.html?instrument=${encodeURIComponent(instrument)}`;
+
                 }
+
                 
+
                 // Check if Storage is available
+
                 if (typeof Storage === 'undefined' || !Storage || typeof Storage.getReservations !== 'function') {
+
                     throw new Error('Storage system not available');
+
                 }
+
                 
+
                 const reservations = await Storage.getReservations();
+
                 console.log('All reservations:', reservations);
+
                 console.log('Reservations for instrument:', instrument, reservations.filter(r => r.instrument === instrument));
+
                 
+
                 // Ensure reservations is an array
+
                 if (!Array.isArray(reservations)) {
+
                     console.error('Reservations is not an array:', reservations);
+
                     throw new Error('Invalid reservations data');
+
                 }
+
                 
+
                 // Filter reservations for this instrument and exclude expired ones
+
                 let instrumentReservations = reservations.filter(r => r.instrument === instrument);
+
                 
+
                 // Filter out expired reservations (using Central Time)
+
                 instrumentReservations = instrumentReservations.filter(r => {
+
                     if (typeof Storage !== 'undefined' && Storage && typeof Storage.isReservationExpired === 'function') {
+
                         return !Storage.isReservationExpired(r);
+
                     }
+
                     // Fallback: if Storage.isReservationExpired is not available, check manually using Central Time
+
                     try {
+
                         if (!r.date || !r.endTime) return true; // No date/end time, assume active
+
                         const [year, month, day] = r.date.split('-').map(Number);
+
                         const [endHour, endMinute] = r.endTime.split(':').map(Number);
+
                         
+
                         // Get current time in Central Time
+
                         const now = new Date();
+
                         const nowCentralStr = now.toLocaleString('en-US', {
+
                             timeZone: 'America/Chicago',
+
                             year: 'numeric',
+
                             month: '2-digit',
+
                             day: '2-digit',
+
                             hour: '2-digit',
+
                             minute: '2-digit',
+
                             second: '2-digit',
+
                             hour12: false
+
                         });
+
                         
+
                         // Parse current Central Time: "MM/DD/YYYY, HH:MM:SS"
+
                         const [nowDatePart, nowTimePart] = nowCentralStr.split(', ');
+
                         const [nowMonth, nowDay, nowYear] = nowDatePart.split('/').map(Number);
+
                         const [nowHour, nowMinute] = nowTimePart.split(':').map(Number);
+
                         
+
                         // Compare date and time in Central Time
+
                         const reservationTime = parseInt(`${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}${String(endHour).padStart(2, '0')}${String(endMinute).padStart(2, '0')}`);
+
                         const currentTime = parseInt(`${nowYear}${String(nowMonth).padStart(2, '0')}${String(nowDay).padStart(2, '0')}${String(nowHour).padStart(2, '0')}${String(nowMinute).padStart(2, '0')}`);
+
                         
+
                         // Reservation is active if end time hasn't passed (comparing in Central Time)
+
                         return reservationTime >= currentTime;
+
                     } catch (e) {
+
                         return true; // On error, assume active
+
                     }
+
                 });
+
                 
+
                 console.log('Filtered instrument reservations (excluding expired):', instrumentReservations.length, instrumentReservations);
+
                 
+
                 // Debug: Check each reservation's structure
+
                 instrumentReservations.forEach((r, index) => {
+
                     console.log(`Reservation ${index}:`, {
+
                         id: r.id,
+
                         instrument: r.instrument,
+
                         name: r.name,
+
                         nameType: typeof r.name,
+
                         date: r.date,
+
                         startTime: r.startTime,
+
                         endTime: r.endTime,
+
                         allKeys: Object.keys(r)
+
                     });
+
                 });
+
                 
+
                 // Check for reservations with missing names
+
                 const reservationsWithoutNames = instrumentReservations.filter(r => !r.name || !r.name.trim());
+
                 if (reservationsWithoutNames.length > 0) {
+
                     console.warn('Found reservations without names:', reservationsWithoutNames);
+
                 }
+
                 
+
                 if (instrumentReservations.length === 0) {
+
                     // Hide the availability-info section when no reservations (to avoid duplicate "Make Reservation" link)
+
                     const infoSection = document.getElementById('availability-info-section');
+
                     if (infoSection) {
+
                         infoSection.style.display = 'none';
+
                     }
+
                     
+
                     document.getElementById('availability-container').innerHTML = `
+
                         <div class="empty-state">
+
                             <h3>No Reservations Found</h3>
+
                             <p>This instrument has no reservations yet. All time slots are available!</p>
+
                             <a href="make-reservation.html?instrument=${encodeURIComponent(instrument)}" class="btn-primary">Make a Reservation</a>
+
                         </div>
+
                     `;
+
                     return;
+
                 }
+
                 
+
                 // Show the availability-info section when there are reservations
+
                 const infoSection = document.getElementById('availability-info-section');
+
                 if (infoSection) {
+
                     infoSection.style.display = 'block';
+
                 }
+
                 
+
                 // Group reservations by date
+
                 const reservationsByDate = {};
+
                 instrumentReservations.forEach(reservation => {
+
                     if (!reservationsByDate[reservation.date]) {
+
                         reservationsByDate[reservation.date] = [];
+
                     }
+
                     reservationsByDate[reservation.date].push(reservation);
+
                 });
+
                 
+
                 // Sort dates (YYYY-MM-DD format)
+
                 const sortedDates = Object.keys(reservationsByDate).sort((a, b) => {
+
                     // Compare date strings directly (YYYY-MM-DD format sorts correctly)
+
                     return a.localeCompare(b);
+
                 });
+
                 
+
                 // Display reservations grouped by date
+
                 const container = document.getElementById('availability-container');
+
                 
+
                 if (!container) {
+
                     console.error('Availability container not found');
+
                     throw new Error('Page element not found');
+
                 }
+
                 
+
                 // Fallback date formatting function if formatDateWithWeekdayInCentral is not available
+
                 function formatDateFallback(dateString) {
+
                     try {
+
                         // Try to use the function from common.js if available
+
                         if (typeof formatDateWithWeekdayInCentral === 'function') {
+
                             return formatDateWithWeekdayInCentral(dateString);
+
                         }
+
                         
+
                         // Fallback: format date manually in Central Time Zone
+
                         const [year, month, day] = dateString.split('-').map(Number);
+
                         const date = new Date(year, month - 1, day);
+
                         return date.toLocaleDateString('en-US', {
+
                             timeZone: 'America/Chicago',
+
                             year: 'numeric',
+
                             month: 'long',
+
                             day: 'numeric',
+
                             weekday: 'long'
+
                         });
+
                     } catch (error) {
+
                         console.error('Error formatting date:', error);
+
                         // Last resort: simple date display
+
                         return dateString;
+
                     }
+
                 }
+
                 
+
                 // Clear any existing warnings first
+
                 const existingWarning = container.querySelector('.name-warning');
+
                 if (existingWarning) {
+
                     existingWarning.remove();
+
                 }
+
                 
+
                 // Add warning if there are reservations without names
+
                 let warningHTML = '';
+
                 if (reservationsWithoutNames.length > 0) {
+
                     warningHTML = `
+
                         <div class="name-warning" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+
                             <strong>⚠️ Warning:</strong> ${reservationsWithoutNames.length} reservation(s) found without names. 
+
                             These reservations may need to be cancelled and rebooked with proper names.
+
                         </div>
+
                     `;
+
                 }
+
                 
+
                 container.innerHTML = warningHTML + sortedDates.map(date => {
+
                 const formattedDate = formatDateFallback(date);
+
                 
+
                 const dayReservations = reservationsByDate[date].sort((a, b) => 
+
                     a.startTime.localeCompare(b.startTime)
+
                 );
+
                 
+
                 return `
+
                     <div class="date-group">
+
                         <div class="date-header">${formattedDate}</div>
+
                         <div class="time-slots">
+
                             ${dayReservations.map(reservation => {
+
                                 // Debug: Log reservation data
+
                                 console.log('Reservation data:', reservation);
+
                                 console.log('Reservation name:', reservation.name, 'Type:', typeof reservation.name);
+
                                 
+
                                 // Handle missing or empty names - check multiple ways
+
                                 let reservationName = 'Name not provided';
+
                                 let hasName = false;
+
                                 
+
                                 if (reservation.name !== undefined && reservation.name !== null) {
+
                                     const nameStr = String(reservation.name).trim();
+
                                     if (nameStr.length > 0) {
+
                                         reservationName = nameStr;
+
                                         hasName = true;
+
                                     }
+
                                 }
+
                                 
+
                                 const nameStyle = hasName ? '' : 'color: #dc3545; font-weight: 600;';
+
                                 const nameLink = hasName 
+
                                     ? `<a href="view-reservations.html?name=${encodeURIComponent(reservationName)}" style="color: inherit; text-decoration: underline; cursor: pointer;" title="Click to view all reservations for ${reservationName}">${reservationName}</a>`
+
                                     : reservationName;
+
                                 
+
                                 return `
+
                                 <div class="time-slot" ${!hasName ? 'style="border-left-color: #ffc107;"' : ''}>
+
                                     <div class="time-slot-info">
+
                                         <div class="time-slot-time">${reservation.startTime || 'Time not specified'} - ${reservation.endTime || 'Time not specified'}</div>
+
                                         <div class="time-slot-name" style="${nameStyle}">
+
                                             Reserved by: ${nameLink}
+
                                             ${!hasName ? ' ⚠️' : ''}
+
                                         </div>
+
                                         ${reservation.temperature ? `<div class="time-slot-name" style="margin-top: 5px;">Temperature: ${reservation.temperature}</div>` : ''}
+
                                         ${reservation.purpose ? `<div class="time-slot-name" style="margin-top: 5px; font-style: italic;">Purpose: ${reservation.purpose}</div>` : ''}
+
                                         ${!hasName ? `<div class="time-slot-name" style="margin-top: 5px; font-size: 0.85em; color: #666;">Reservation ID: ${reservation.id || 'N/A'}</div>` : ''}
+
                                     </div>
+
                                     <div style="display: flex; align-items: center; gap: 10px;">
+
                                         <span class="reserved-badge">Reserved</span>
+
                                         <button class="btn-cancel-small" onclick="showCancelModal('${reservation.id || ''}', '${reservationName.replace(/'/g, "\\'")}')" style="padding: 6px 12px; font-size: 0.85em;">Cancel</button>
+
                                     </div>
+
                                 </div>
+
                             `;
+
                             }).join('')}
+
                         </div>
+
                     </div>
+
                 `;
+
                 }).join('');
+
             } catch (error) {
+
                 console.error('Error loading availability:', error);
+
                 const container = document.getElementById('availability-container');
+
                 if (container) {
+
                     container.innerHTML = `
+
                         <div class="empty-state">
+
                             <h3>Error Loading Availability</h3>
+
                             <p>An error occurred: ${error.message || 'Unknown error'}</p>
+
                             <button onclick="location.reload()" class="btn-primary" style="margin-top: 15px;">Refresh Page</button>
+
                         </div>
+
                     `;
+
                 }
+
             }
+
         }
+
         
+
         window.onload = loadAvailability;
+
     </script>
+
     <link rel="stylesheet" href="styles.css">
+
 </head>
+
 <body>
+
     <div class="container">
+
         <header>
+
             <h1>🥛 Dr. V's Lab</h1>
+
             <p>Instrument Reservation System</p>
+
         </header>
+
         
+
         <nav>
+
             <ul>
+
                 <li><a href="index.html">Home</a></li>
+
                 <li><a href="instruments.html">View Instruments</a></li>
+
                 <li><a href="make-reservation.html">Make Reservation</a></li>
+
                 <li><a href="view-reservations.html">My Reservations</a></li>
+
             </ul>
+
         </nav>
+
         
+
         <main>
+
             <h2 class="page-title">Check Availability</h2>
+
             <div class="instrument-name" id="instrument-name"></div>
+
             
+
             <div class="availability-info" id="availability-info-section">
+
                 <p><strong>Reserved Time Slots:</strong> Below are all the dates and times that have been reserved for this instrument. Available time slots are those not listed below.</p>
+
                 <p style="margin-top: 10px;">
+
                     <a href="#" id="make-reservation-link" class="btn-primary" style="text-decoration: none; display: inline-block;">Make a Reservation</a>
+
                 </p>
+
             </div>
+
             
+
             <div id="availability-container" class="reservations-calendar">
+
                 <!-- Reservations will be loaded here -->
+
             </div>
+
         </main>
+
         
+
         <footer>
+
             <p>&copy; 2025 Dr. V's Lab. All rights reserved.</p>
+
         </footer>
+
     </div>
+
     
+
     <!-- Cancel Reservation Modal -->
+
     <div id="cancelModal" class="modal">
+
         <div class="modal-content">
+
             <h3>Cancel Reservation</h3>
+
             <p><strong>To cancel this reservation, you must enter the exact booking name used when making the reservation:</strong></p>
+
             <div id="cancelReservationInfo"></div>
+
             <input type="text" id="cancelNameInput" placeholder="Enter the booking name exactly as it appears" autocomplete="off">
+
             <div id="cancelErrorMsg" class="error-message"></div>
+
             <div class="modal-buttons">
+
                 <button class="btn-close" onclick="closeCancelModal()">Close</button>
+
                 <button class="btn-confirm" id="confirmCancelBtn" onclick="verifyAndCancel()">Confirm Cancellation</button>
+
             </div>
+
         </div>
+
     </div>
+
 </body>
+
 </html>
+
 

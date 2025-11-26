@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -748,20 +749,12 @@
                 const savedReservation = await Storage.saveReservation(reservation);
                 console.log('Reservation saved:', savedReservation);
                 
-                // Verify the reservation was saved correctly
-                const allReservations = await Storage.getReservations();
-                const verifyReservation = allReservations.find(r => r.id === reservation.id);
-                if (verifyReservation) {
-                    console.log('Verified saved reservation:', verifyReservation);
-                    if (!verifyReservation.name || verifyReservation.name !== trimmedName) {
-                        console.error('Name mismatch! Saved:', verifyReservation.name, 'Expected:', trimmedName);
-                    }
-                } else {
-                    console.error('Reservation not found after saving!');
-                }
+                // Keep a copy for the details page
+                localStorage.setItem('viewingReservation', JSON.stringify(savedReservation || reservation));
                 
                 alert('Reservation submitted successfully!');
-                window.location.href = 'instruments.html';
+                // Go to details so user sees a confirmation with all info
+                window.location.href = 'reservation-details.html';
             } catch (error) {
                 alert('Error saving reservation. Please try again.');
                 console.error('Error saving reservation:', error);
@@ -814,6 +807,8 @@
                         <optgroup label="Particle Size Reduction">
                             <option value="Chem-Grade IKA Ultra-Turrax T25 Homogenizer">Chem-Grade IKA Ultra-Turrax T25 Homogenizer</option>
                             <option value="Chem-Grade SONICS Ultrasonic Extractor">Chem-Grade SONICS Ultrasonic Extractor</option>
+                            <option value="Food-Grade IKA Ultra-Turrax T25 Homogenizer">Food-Grade IKA Ultra-Turrax T25 Homogenizer</option>
+                            <option value="Food-Grade SONICS Ultrasonic Extractor">Food-Grade SONICS Ultrasonic Extractor</option>
                         </optgroup>
                         <optgroup label="Rheology">
                             <option value="Kinexus Rheometer">Kinexus Rheometer</option>
@@ -916,4 +911,5 @@
     </div>
 </body>
 </html>
+
 
