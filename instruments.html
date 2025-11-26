@@ -145,6 +145,79 @@
             font-size: 1.1em;
         }
         
+        .instrument-search-box {
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+        
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 14px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1.05em;
+            transition: all 0.3s;
+            background: #ffffff;
+            color: #000000;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #000000;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-input::placeholder {
+            color: #999;
+        }
+        
+        .btn-clear {
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+        
+        .btn-clear:hover {
+            background: #5a6268;
+            transform: scale(1.1);
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .no-results h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #000000;
+        }
+        
+        .no-results p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+        
         .instruments-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -280,12 +353,31 @@
                 width: 220px;
                 height: 220px;
             }
+            
+            .instrument-search-box {
+                padding: 0 10px;
+            }
+            
+            .search-input {
+                font-size: 1em;
+                padding: 12px 16px;
+            }
         }
         
         @media (max-width: 480px) {
             .instrument-icon {
                 width: 180px;
                 height: 180px;
+            }
+            
+            .search-container {
+                gap: 8px;
+            }
+            
+            .btn-clear {
+                width: 32px;
+                height: 32px;
+                font-size: 1em;
             }
         }
     </style>
@@ -314,6 +406,13 @@
         </nav>
         
         <main>
+            <div class="instrument-search-box">
+                <div class="search-container">
+                    <input type="text" id="instrumentSearchInput" placeholder="Search instruments by name..." class="search-input">
+                    <button id="clearSearchBtn" class="btn-clear" style="display: none;" onclick="clearSearch()">✕</button>
+                </div>
+            </div>
+            
             <h2 class="page-title">Available Instruments</h2>
             <p class="page-subtitle">Click on an instrument to check availability and make a reservation</p>
             
@@ -432,20 +531,98 @@
             }
         ];
         
+        // Store all instruments data for filtering
+        let allInstrumentsData = [];
+        let allReservations = [];
+        let instrumentsWithReservations = new Set();
+        
+        // Filter instruments based on search query
+        function filterInstruments(searchQuery) {
+            const container = document.getElementById('instruments-container');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            
+            // Show/hide clear button
+            if (searchQuery && searchQuery.trim().length > 0) {
+                clearBtn.style.display = 'flex';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+            
+            // Filter instruments
+            const query = (searchQuery || '').toLowerCase().trim();
+            const filteredInstruments = query === '' 
+                ? allInstrumentsData 
+                : allInstrumentsData.filter(instrument => {
+                    const nameMatch = instrument.name.toLowerCase().includes(query);
+                    const categoryMatch = instrument.category.toLowerCase().includes(query);
+                    return nameMatch || categoryMatch;
+                });
+            
+            // Render filtered instruments
+            if (filteredInstruments.length === 0) {
+                container.className = '';
+                container.innerHTML = `
+                    <div class="no-results">
+                        <h3>No Instruments Found</h3>
+                        <p>No instruments match your search "${searchQuery}".</p>
+                        <p style="color: #6c757d; font-size: 0.95em; margin-top: 10px;">
+                            Try searching by instrument name or category.
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.className = 'instruments-grid';
+            container.innerHTML = filteredInstruments.map(instrument => {
+                const hasReservation = instrumentsWithReservations.has(instrument.name);
+                const statusClass = hasReservation ? 'status-busy' : 'status-available';
+                const statusText = hasReservation ? 'Busy Today' : 'Available today';
+                
+                // Check if icon file exists, use a default if not
+                const iconPath = instrument.icon || '🔬';
+                const iconHtml = iconPath.endsWith('.JPEG') || iconPath.endsWith('.jpg') || iconPath.endsWith('.png') 
+                    ? `<img src="${iconPath}" alt="${instrument.name}" class="instrument-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                       <div style="display:none; font-size: 3em;">🔬</div>`
+                    : `<div style="font-size: 3em;">${iconPath}</div>`;
+                
+                return `
+                    <a href="check-availability.html?instrument=${encodeURIComponent(instrument.name)}" class="instrument-card">
+                        ${iconHtml}
+                        <div class="instrument-category">${instrument.category}</div>
+                        <div class="instrument-name">${instrument.name}</div>
+                        <div class="instrument-status ${statusClass}">${statusText}</div>
+                        <div class="action-buttons">
+                            <span class="btn btn-primary">Check Availability</span>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+        
+        // Clear search function
+        function clearSearch() {
+            const searchInput = document.getElementById('instrumentSearchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                filterInstruments('');
+                searchInput.focus();
+            }
+        }
+        
         // Load instruments and their availability status
         async function loadInstruments() {
             const container = document.getElementById('instruments-container');
             
             try {
                 // Get all reservations to check availability
-                let reservations = [];
                 if (typeof Storage !== 'undefined' && Storage && typeof Storage.getReservations === 'function') {
-                    reservations = await Storage.getReservations();
+                    allReservations = await Storage.getReservations();
                 } else {
                     // Fallback to localStorage
                     const stored = localStorage.getItem('reservations');
                     if (stored) {
-                        reservations = JSON.parse(stored);
+                        allReservations = JSON.parse(stored);
                     }
                 }
                 
@@ -464,7 +641,7 @@
                 // Check which instruments have non-expired reservations TODAY ONLY
                 // Important: Only TODAY's reservations count for "Busy Today" status
                 // Future reservations (tomorrow, next week, etc.) do NOT make an instrument "Busy Today"
-                const activeTodayReservations = reservations.filter(r => {
+                const activeTodayReservations = allReservations.filter(r => {
                     // CRITICAL: Must be for TODAY - future dates are excluded
                     if (r.date !== todayStr) {
                         return false; // Skip future or past dates
@@ -510,39 +687,19 @@
                 
                 // Only instruments with active reservations TODAY will show "Busy Today"
                 // Instruments with only future reservations will show "Available today"
-                const instrumentsWithReservations = new Set(activeTodayReservations.map(r => r.instrument));
+                instrumentsWithReservations = new Set(activeTodayReservations.map(r => r.instrument));
                 
-                // Render instrument cards
+                // Store all instruments data
+                allInstrumentsData = instruments;
+                
+                // Render instrument cards (initially show all)
                 if (instruments.length === 0) {
                     container.innerHTML = '<p>No instruments available.</p>';
                     return;
                 }
                 
-                container.className = 'instruments-grid';
-                container.innerHTML = instruments.map(instrument => {
-                    const hasReservation = instrumentsWithReservations.has(instrument.name);
-                    const statusClass = hasReservation ? 'status-busy' : 'status-available';
-                    const statusText = hasReservation ? 'Busy Today' : 'Available today';
-                    
-                    // Check if icon file exists, use a default if not
-                    const iconPath = instrument.icon || '🔬';
-                    const iconHtml = iconPath.endsWith('.JPEG') || iconPath.endsWith('.jpg') || iconPath.endsWith('.png') 
-                        ? `<img src="${iconPath}" alt="${instrument.name}" class="instrument-icon" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                           <div style="display:none; font-size: 3em;">🔬</div>`
-                        : `<div style="font-size: 3em;">${iconPath}</div>`;
-                    
-                    return `
-                        <a href="check-availability.html?instrument=${encodeURIComponent(instrument.name)}" class="instrument-card">
-                            ${iconHtml}
-                            <div class="instrument-category">${instrument.category}</div>
-                            <div class="instrument-name">${instrument.name}</div>
-                            <div class="instrument-status ${statusClass}">${statusText}</div>
-                            <div class="action-buttons">
-                                <span class="btn btn-primary">Check Availability</span>
-                            </div>
-                        </a>
-                    `;
-                }).join('');
+                // Initial render with all instruments
+                filterInstruments('');
                 
             } catch (error) {
                 console.error('Error loading instruments:', error);
@@ -554,6 +711,7 @@
                 `;
                 
                 // Fallback: show instruments without availability check
+                allInstrumentsData = instruments;
                 container.className = 'instruments-grid';
                 container.innerHTML = instruments.map(instrument => {
                     const iconPath = instrument.icon || '🔬';
@@ -580,6 +738,23 @@
         // Load instruments when page loads
         window.addEventListener('DOMContentLoaded', () => {
             loadInstruments();
+            
+            // Set up search input event listener
+            const searchInput = document.getElementById('instrumentSearchInput');
+            if (searchInput) {
+                // Real-time search as user types
+                searchInput.addEventListener('input', function() {
+                    filterInstruments(this.value);
+                });
+                
+                // Allow Enter key to focus (optional)
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        // Search is already handled by input event
+                    }
+                });
+            }
         });
     </script>
 </body>
