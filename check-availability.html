@@ -293,8 +293,50 @@
                     throw new Error('Invalid reservations data');
                 }
                 
-                const instrumentReservations = reservations.filter(r => r.instrument === instrument);
-                console.log('Filtered instrument reservations:', instrumentReservations.length, instrumentReservations);
+                // Filter reservations for this instrument and exclude expired ones
+                let instrumentReservations = reservations.filter(r => r.instrument === instrument);
+                
+                // Filter out expired reservations (using Central Time)
+                instrumentReservations = instrumentReservations.filter(r => {
+                    if (typeof Storage !== 'undefined' && Storage && typeof Storage.isReservationExpired === 'function') {
+                        return !Storage.isReservationExpired(r);
+                    }
+                    // Fallback: if Storage.isReservationExpired is not available, check manually using Central Time
+                    try {
+                        if (!r.date || !r.endTime) return true; // No date/end time, assume active
+                        const [year, month, day] = r.date.split('-').map(Number);
+                        const [endHour, endMinute] = r.endTime.split(':').map(Number);
+                        
+                        // Get current time in Central Time
+                        const now = new Date();
+                        const nowCentralStr = now.toLocaleString('en-US', {
+                            timeZone: 'America/Chicago',
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                        });
+                        
+                        // Parse current Central Time: "MM/DD/YYYY, HH:MM:SS"
+                        const [nowDatePart, nowTimePart] = nowCentralStr.split(', ');
+                        const [nowMonth, nowDay, nowYear] = nowDatePart.split('/').map(Number);
+                        const [nowHour, nowMinute] = nowTimePart.split(':').map(Number);
+                        
+                        // Compare date and time in Central Time
+                        const reservationTime = parseInt(`${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}${String(endHour).padStart(2, '0')}${String(endMinute).padStart(2, '0')}`);
+                        const currentTime = parseInt(`${nowYear}${String(nowMonth).padStart(2, '0')}${String(nowDay).padStart(2, '0')}${String(nowHour).padStart(2, '0')}${String(nowMinute).padStart(2, '0')}`);
+                        
+                        // Reservation is active if end time hasn't passed (comparing in Central Time)
+                        return reservationTime >= currentTime;
+                    } catch (e) {
+                        return true; // On error, assume active
+                    }
+                });
+                
+                console.log('Filtered instrument reservations (excluding expired):', instrumentReservations.length, instrumentReservations);
                 
                 // Debug: Check each reservation's structure
                 instrumentReservations.forEach((r, index) => {

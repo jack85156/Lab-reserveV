@@ -449,13 +449,68 @@
                     }
                 }
                 
-                // Get today's date in YYYY-MM-DD format
-                const today = new Date();
-                const todayStr = today.toISOString().split('T')[0];
+                // Get today's date in YYYY-MM-DD format (using Central Time)
+                const now = new Date();
+                const todayCentralStr = now.toLocaleString('en-US', {
+                    timeZone: 'America/Chicago',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                });
+                // Parse Central Time date: "MM/DD/YYYY"
+                const [month, day, year] = todayCentralStr.split('/').map(Number);
+                const todayStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 
-                // Check which instruments have reservations today
-                const todayReservations = reservations.filter(r => r.date === todayStr);
-                const instrumentsWithReservations = new Set(todayReservations.map(r => r.instrument));
+                // Check which instruments have non-expired reservations TODAY ONLY
+                // Important: Only TODAY's reservations count for "Busy Today" status
+                // Future reservations (tomorrow, next week, etc.) do NOT make an instrument "Busy Today"
+                const activeTodayReservations = reservations.filter(r => {
+                    // CRITICAL: Must be for TODAY - future dates are excluded
+                    if (r.date !== todayStr) {
+                        return false; // Skip future or past dates
+                    }
+                    // Must not be expired (end time hasn't passed)
+                    if (typeof Storage !== 'undefined' && Storage && typeof Storage.isReservationExpired === 'function') {
+                        return !Storage.isReservationExpired(r);
+                    }
+                    // Fallback: if Storage.isReservationExpired is not available, check manually using Central Time
+                    try {
+                        if (!r.endTime) return true; // No end time, assume active
+                        const [year, month, day] = r.date.split('-').map(Number);
+                        const [endHour, endMinute] = r.endTime.split(':').map(Number);
+                        
+                        // Get current time in Central Time
+                        const now = new Date();
+                        const nowCentralStr = now.toLocaleString('en-US', {
+                            timeZone: 'America/Chicago',
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                        });
+                        
+                        // Parse current Central Time: "MM/DD/YYYY, HH:MM:SS"
+                        const [nowDatePart, nowTimePart] = nowCentralStr.split(', ');
+                        const [nowMonth, nowDay, nowYear] = nowDatePart.split('/').map(Number);
+                        const [nowHour, nowMinute] = nowTimePart.split(':').map(Number);
+                        
+                        // Compare date and time in Central Time
+                        const reservationTime = parseInt(`${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}${String(endHour).padStart(2, '0')}${String(endMinute).padStart(2, '0')}`);
+                        const currentTime = parseInt(`${nowYear}${String(nowMonth).padStart(2, '0')}${String(nowDay).padStart(2, '0')}${String(nowHour).padStart(2, '0')}${String(nowMinute).padStart(2, '0')}`);
+                        
+                        // Reservation is active if end time hasn't passed (comparing in Central Time)
+                        return reservationTime >= currentTime;
+                    } catch (e) {
+                        return true; // On error, assume active
+                    }
+                });
+                
+                // Only instruments with active reservations TODAY will show "Busy Today"
+                // Instruments with only future reservations will show "Available today"
+                const instrumentsWithReservations = new Set(activeTodayReservations.map(r => r.instrument));
                 
                 // Render instrument cards
                 if (instruments.length === 0) {
@@ -467,7 +522,7 @@
                 container.innerHTML = instruments.map(instrument => {
                     const hasReservation = instrumentsWithReservations.has(instrument.name);
                     const statusClass = hasReservation ? 'status-busy' : 'status-available';
-                    const statusText = hasReservation ? 'Busy Today' : 'Available';
+                    const statusText = hasReservation ? 'Busy Today' : 'Available today';
                     
                     // Check if icon file exists, use a default if not
                     const iconPath = instrument.icon || '🔬';
