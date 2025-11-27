@@ -2,20 +2,73 @@
 // Uses Supabase for cloud database storage
 
 // Supabase configuration
-// Prefer values from the page (window.SUPABASE_URL / window.SUPABASE_ANON_KEY),
-// but fall back to the hard‑coded project values if present.
-// NOTE: in a real deployment you should NOT expose your anon key in frontend
-// code like this; this is only for simple lab/demo usage.
-const SUPABASE_URL = (typeof window !== 'undefined' && window.SUPABASE_URL)
-    ? window.SUPABASE_URL
-    : 'https://zgpitqqdhbsfvktmqpyw.supabase.co';
+// Replace these with your Supabase project credentials
+// These should be set in your HTML files before loading this script:
+// <script>
+//   window.SUPABASE_URL = 'https://ldfeumcasypgprhtbvpp.supabase.co';
+//   window.SUPABASE_ANON_KEY = 'sb_publishable_vXEIEUWtBo9osE15js3mBA_s_Dm0Uwl';
+// </script>
+const DEFAULT_SUPABASE_URL = 'https://zgpitqqdhbsfvktmqpyw.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpncGl0cXFkaGJzZnZrdG1xcHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMjQ2MDAsImV4cCI6MjA3OTYwMDYwMH0.IkUWNpX7IyfT_GhLoJ2rqp7DbzqtkXXcBFR8marULGc';
 
-const SUPABASE_ANON_KEY = (typeof window !== 'undefined' && window.SUPABASE_ANON_KEY)
-    ? window.SUPABASE_ANON_KEY
-    : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpncGl0cXFkaGJzZnZrdG1xcHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMjQ2MDAsImV4cCI6MjA3OTYwMDYwMH0.IkUWNpX7IyfT_GhLoJ2rqp7DbzqtkXXcBFR8marULGc';
+const SUPABASE_URL = (typeof window !== 'undefined' && window.SUPABASE_URL) || DEFAULT_SUPABASE_URL;
+const SUPABASE_ANON_KEY = (typeof window !== 'undefined' && window.SUPABASE_ANON_KEY) || DEFAULT_SUPABASE_ANON_KEY;
 
 // Table name in Supabase
 const RESERVATIONS_TABLE = 'bookings';
+
+// Helper: determine if a reservation's end time has already passed (Central Time)
+function isReservationExpired(reservation) {
+    try {
+        if (!reservation || !reservation.date || !reservation.endTime) {
+            return false;
+        }
+
+        const [year, month, day] = reservation.date.split('-').map(Number);
+        const [endHour, endMinute] = (reservation.endTime || '00:00').split(':').map(Number);
+
+        const now = new Date();
+        const nowCentralStr = now.toLocaleString('en-US', {
+            timeZone: 'America/Chicago',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+
+        const [nowDatePart, nowTimePart] = nowCentralStr.split(', ');
+        const [nowMonth, nowDay, nowYear] = nowDatePart.split('/').map(Number);
+        const [nowHour, nowMinute] = nowTimePart.split(':').map(Number);
+
+        const reservationTime = parseInt(
+            `${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}${String(endHour).padStart(2, '0')}${String(endMinute).padStart(2, '0')}`
+        );
+        const currentTime = parseInt(
+            `${nowYear}${String(nowMonth).padStart(2, '0')}${String(nowDay).padStart(2, '0')}${String(nowHour).padStart(2, '0')}${String(nowMinute).padStart(2, '0')}`
+        );
+
+        return reservationTime < currentTime;
+    } catch (error) {
+        console.error('Failed to determine if reservation expired:', error, reservation);
+        return false;
+    }
+}
+
+function splitExpiredReservations(reservations = []) {
+    const expiredReservations = [];
+    const activeReservations = [];
+    reservations.forEach(reservation => {
+        if (isReservationExpired(reservation)) {
+            expiredReservations.push(reservation);
+        } else {
+            activeReservations.push(reservation);
+        }
+    });
+    return { expiredReservations, activeReservations };
+}
 
 // Initialize Supabase client if credentials are available
 // Note: Supabase client must be loaded via CDN script tag in HTML before this script
@@ -160,8 +213,22 @@ const Storage = {
                 // Log all names for debugging
                 const allNames = reservations.map(r => r.name).filter(n => n);
                 console.log('All reservation names from Supabase:', allNames);
+
+                // Remove expired reservations automatically
+                const { expiredReservations, activeReservations } = splitExpiredReservations(reservations);
+                if (expiredReservations.length > 0) {
+                    const idsToDelete = expiredReservations.map(r => r.id).filter(Boolean);
+                    if (idsToDelete.length) {
+                        try {
+                            await supabase.from(RESERVATIONS_TABLE).delete().in('id', idsToDelete);
+                            console.log('Removed expired reservations from Supabase:', idsToDelete);
+                        } catch (cleanupError) {
+                            console.error('Failed to remove expired reservations from Supabase:', cleanupError);
+                        }
+                    }
+                }
                 
-                return reservations;
+                return activeReservations;
             } catch (error) {
                 console.error('❌ ERROR: Failed to fetch reservations from Supabase:', error);
                 console.error('Error details:', {
@@ -210,11 +277,16 @@ const Storage = {
                 const localData = JSON.parse(localStorage.getItem('reservations') || '[]');
                 console.warn('⚠️ Falling back to localStorage. Bookings are NOT shared across devices!');
                 console.warn('Local storage has', localData.length, 'reservations');
-                return localData;
+                const { expiredReservations, activeReservations } = splitExpiredReservations(localData);
+                if (expiredReservations.length > 0) {
+                    localStorage.setItem('reservations', JSON.stringify(activeReservations));
+                    console.warn('Removed expired reservations from local fallback:', expiredReservations.length);
+                }
+                return activeReservations;
             }
         } else {
             // Use localStorage
-            const reservations = JSON.parse(localStorage.getItem('reservations') || '[]');
+            let reservations = JSON.parse(localStorage.getItem('reservations') || '[]');
             console.log('Retrieved reservations from localStorage:', reservations.length);
             // Check for reservations with missing names
             const missingNames = reservations.filter(r => !r.name || !r.name.trim());
@@ -224,7 +296,13 @@ const Storage = {
             // Log all names for debugging
             const allNames = reservations.map(r => r.name).filter(n => n);
             console.log('All reservation names from localStorage:', allNames);
-            return reservations;
+
+            const { expiredReservations, activeReservations } = splitExpiredReservations(reservations);
+            if (expiredReservations.length > 0) {
+                console.warn('Removing expired reservations from localStorage:', expiredReservations.length);
+                localStorage.setItem('reservations', JSON.stringify(activeReservations));
+            }
+            return activeReservations;
         }
     },
 
@@ -418,5 +496,9 @@ const Storage = {
             localStorage.setItem('reservations', JSON.stringify(reservations));
             return reservations;
         }
+    },
+
+    isReservationExpired(reservation) {
+        return isReservationExpired(reservation);
     }
 };
