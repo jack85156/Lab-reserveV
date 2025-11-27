@@ -743,6 +743,60 @@
                 reservation.purpose = purpose.trim();
             }
             
+            // Check for conflicts with existing reservations
+            try {
+                const existingReservations = await Storage.getReservations();
+                
+                // Filter reservations for the same instrument and date
+                const conflictingReservations = existingReservations.filter(existing => {
+                    // Must be same instrument and same date
+                    if (existing.instrument !== instrument || existing.date !== date) {
+                        return false;
+                    }
+                    
+                    // Check if time slots overlap
+                    // Two time slots overlap if:
+                    // - New start is between existing start and end, OR
+                    // - New end is between existing start and end, OR
+                    // - New slot completely contains existing slot, OR
+                    // - Existing slot completely contains new slot
+                    
+                    const [newStartH, newStartM] = startTime.split(':').map(Number);
+                    const [newEndH, newEndM] = endTime.split(':').map(Number);
+                    const [existingStartH, existingStartM] = (existing.startTime || '00:00').split(':').map(Number);
+                    const [existingEndH, existingEndM] = (existing.endTime || '00:00').split(':').map(Number);
+                    
+                    // Convert to minutes for easier comparison
+                    const newStartMinutes = newStartH * 60 + newStartM;
+                    const newEndMinutes = newEndH * 60 + newEndM;
+                    const existingStartMinutes = existingStartH * 60 + existingStartM;
+                    const existingEndMinutes = existingEndH * 60 + existingEndM;
+                    
+                    // Check for overlap: new slot overlaps if it starts before existing ends AND ends after existing starts
+                    const hasOverlap = newStartMinutes < existingEndMinutes && newEndMinutes > existingStartMinutes;
+                    
+                    return hasOverlap;
+                });
+                
+                if (conflictingReservations.length > 0) {
+                    // Found conflicts - show error with details
+                    const conflictDetails = conflictingReservations.map(conflict => {
+                        return `${conflict.name} (${conflict.startTime} - ${conflict.endTime})`;
+                    }).join(', ');
+                    
+                    alert(`❌ Time slot conflict!\n\nThis instrument is already reserved for ${date}:\n${conflictDetails}\n\nPlease choose a different time slot.`);
+                    return; // Stop here, don't save
+                }
+            } catch (conflictCheckError) {
+                console.error('Error checking for conflicts:', conflictCheckError);
+                // Continue anyway - better to allow reservation than block due to check error
+                // But warn the user
+                const proceed = confirm('Warning: Could not verify availability. There may be a conflict with an existing reservation.\n\nDo you want to proceed anyway?');
+                if (!proceed) {
+                    return; // User chose not to proceed
+                }
+            }
+            
             // Store reservation using Storage API (works with localStorage or backend)
             reservation.id = Date.now().toString();
             try {
