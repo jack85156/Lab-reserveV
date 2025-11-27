@@ -753,8 +753,8 @@
                 localStorage.setItem('viewingReservation', JSON.stringify(savedReservation || reservation));
                 
                 alert('Reservation submitted successfully!');
-                // Go to details so user sees a confirmation with all info
-                window.location.href = 'reservation-details.html';
+                // Go to instruments page to see available instruments
+                window.location.href = 'instruments.html';
             } catch (error) {
                 alert('Error saving reservation. Please try again.');
                 console.error('Error saving reservation:', error);
