@@ -355,20 +355,33 @@
             return { hours, minutes };
         }
         
-        // Helper function to round up to next 30-minute interval
-        // If current time is 10:50 PM, round up to 11:00 PM (23:00)
-        // If current time is 10:20 PM, round up to 10:30 PM (22:30)
-        function roundUpToNext30Min(hours, minutes) {
+        // Helper function to round up to next 10-minute interval
+        // If current time is 10:52 PM, round up to 11:00 PM (23:00)
+        // If current time is 10:23 PM, round up to 10:30 PM (22:30)
+        // If current time is 10:15 PM, round up to 10:20 PM (22:20)
+        function roundUpToNext10Min(hours, minutes) {
             let roundedHours = hours;
             let roundedMinutes = minutes;
             
-            if (minutes > 0 && minutes <= 30) {
+            // Round up to next 10-minute interval: 0, 10, 20, 30, 40, 50
+            if (minutes === 0) {
+                // Already at a valid interval
+                roundedMinutes = 0;
+            } else if (minutes > 0 && minutes <= 10) {
+                roundedMinutes = 10;
+            } else if (minutes > 10 && minutes <= 20) {
+                roundedMinutes = 20;
+            } else if (minutes > 20 && minutes <= 30) {
                 roundedMinutes = 30;
-            } else if (minutes > 30) {
+            } else if (minutes > 30 && minutes <= 40) {
+                roundedMinutes = 40;
+            } else if (minutes > 40 && minutes <= 50) {
+                roundedMinutes = 50;
+            } else if (minutes > 50) {
+                // Round up to next hour
                 roundedMinutes = 0;
                 roundedHours = (hours + 1) % 24;
             }
-            // If minutes is 0, keep it as is
             
             return { hours: roundedHours, minutes: roundedMinutes };
         }
@@ -506,8 +519,8 @@
                 const currentTime = getCentralTime();
                 const isToday = selectedDate === todayString;
                 
-                // Round up current time to next 30-minute interval
-                const minTime = isToday ? roundUpToNext30Min(currentTime.hours, currentTime.minutes) : null;
+                // Round up current time to next 10-minute interval
+                const minTime = isToday ? roundUpToNext10Min(currentTime.hours, currentTime.minutes) : null;
                 
                 // Enable all options first
                 [startHourSelect, startMinuteSelect, endHourSelect, endMinuteSelect].forEach(select => {
@@ -521,31 +534,58 @@
                 
                 // If today, disable past time slots
                 if (isToday && minTime) {
+                    const selectedStartHour = startHourSelect.value;
+                    const selectedStartMinute = startMinuteSelect.value;
+                    const minHourStr = String(minTime.hours).padStart(2, '0');
+                    const minHourNum = minTime.hours;
+                    const minMinuteNum = minTime.minutes;
+                    
                     // Disable start hour options before minimum hour
                     Array.from(startHourSelect.options).forEach(option => {
                         if (option.value !== '') {
                             const hour = parseInt(option.value);
-                            if (hour < minTime.hours) {
+                            // Disable all hours strictly before the minimum hour
+                            if (hour < minHourNum) {
                                 option.disabled = true;
                                 option.style.color = '#999';
-                            } else if (hour === minTime.hours) {
-                                // For the minimum hour, disable minutes before minimum minute
-                                // This will be handled in the minute select
+                            } else {
+                                // Re-enable hours that are at or after minimum (in case they were disabled before)
+                                option.disabled = false;
+                                option.style.color = '';
                             }
                         }
                     });
                     
-                    // Disable start minute options for the minimum hour
-                    if (startHourSelect.value === String(minTime.hours).padStart(2, '0')) {
+                    // If a start hour is selected but it's before the minimum, clear it
+                    if (selectedStartHour && parseInt(selectedStartHour) < minHourNum) {
+                        startHourSelect.value = '';
+                        startMinuteSelect.value = '';
+                        document.getElementById('startTime').value = '';
+                    }
+                    
+                    // Disable start minute options for the minimum hour that are before minimum minute
+                    // This applies when the minimum hour is selected
+                    if (selectedStartHour === minHourStr) {
                         Array.from(startMinuteSelect.options).forEach(option => {
                             if (option.value !== '') {
                                 const minute = parseInt(option.value);
-                                if (minute < minTime.minutes) {
+                                // Disable minutes that are strictly before the minimum minute
+                                if (minute < minMinuteNum) {
                                     option.disabled = true;
                                     option.style.color = '#999';
+                                } else {
+                                    // Re-enable minutes that are at or after minimum
+                                    option.disabled = false;
+                                    option.style.color = '';
                                 }
                             }
                         });
+                        
+                        // If a start minute is selected but it's before the minimum, clear it
+                        if (selectedStartMinute && parseInt(selectedStartMinute) < minMinuteNum) {
+                            startMinuteSelect.value = '';
+                            document.getElementById('startTime').value = '';
+                        }
                     }
                 }
                 
@@ -684,10 +724,11 @@
             updateTimeOptions();
         };
         
-        function isValid30MinInterval(time) {
+        function isValid10MinInterval(time) {
             if (!time) return false;
             const [hours, minutes] = time.split(':').map(Number);
-            return minutes === 0 || minutes === 30;
+            // Valid intervals: 0, 10, 20, 30, 40, 50
+            return minutes === 0 || minutes === 10 || minutes === 20 || minutes === 30 || minutes === 40 || minutes === 50;
         }
         
         function validateDateTime() {
@@ -699,7 +740,7 @@
             const startTime = startTimeInput.value;
             const endTime = endTimeInput.value;
             
-            // Times are already validated to be 30-minute intervals by the dropdown
+            // Times are already validated to be 10-minute intervals by the dropdown
             
             if (!selectedDate || !startTime || !endTime) {
                 return;
@@ -796,7 +837,7 @@
             
             // If date is today, validate that start time is not in the past
             if (date === todayString) {
-                const minTime = roundUpToNext30Min(currentTime.hours, currentTime.minutes);
+                const minTime = roundUpToNext10Min(currentTime.hours, currentTime.minutes);
                 const [startH, startM] = startTime.split(':').map(Number);
                 const startMinutes = startH * 60 + startM;
                 const minMinutes = minTime.hours * 60 + minTime.minutes;
@@ -808,14 +849,14 @@
                 }
             }
             
-            // Validate 30-minute intervals
-            if (!isValid30MinInterval(startTime)) {
-                alert('Start time must be in 30-minute intervals (e.g., 6:00, 6:30, 7:00).');
+            // Validate 10-minute intervals
+            if (!isValid10MinInterval(startTime)) {
+                alert('Start time must be in 10-minute intervals (e.g., 6:00, 6:10, 6:20, 6:30, 6:40, 6:50).');
                 return;
             }
             
-            if (!isValid30MinInterval(endTime)) {
-                alert('End time must be in 30-minute intervals (e.g., 6:00, 6:30, 7:00).');
+            if (!isValid10MinInterval(endTime)) {
+                alert('End time must be in 10-minute intervals (e.g., 6:00, 6:10, 6:20, 6:30, 6:40, 6:50).');
                 return;
             }
             
@@ -1034,7 +1075,11 @@
                             <select id="startTimeMinute" required style="flex: 1; padding: 12px; border: 2px solid #e9ecef; border-radius: 4px; font-size: 1em;">
                                 <option value="">Minute</option>
                                 <option value="00">00</option>
+                                <option value="10">10</option>
+                                <option value="20">20</option>
                                 <option value="30">30</option>
+                                <option value="40">40</option>
+                                <option value="50">50</option>
                             </select>
                         </div>
                         <input type="hidden" id="startTime" name="startTime" required>
@@ -1050,7 +1095,11 @@
                             <select id="endTimeMinute" required style="flex: 1; padding: 12px; border: 2px solid #e9ecef; border-radius: 4px; font-size: 1em;">
                                 <option value="">Minute</option>
                                 <option value="00">00</option>
+                                <option value="10">10</option>
+                                <option value="20">20</option>
                                 <option value="30">30</option>
+                                <option value="40">40</option>
+                                <option value="50">50</option>
                             </select>
                         </div>
                         <input type="hidden" id="endTime" name="endTime" required>
