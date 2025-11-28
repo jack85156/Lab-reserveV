@@ -8,8 +8,8 @@
 //   window.SUPABASE_URL = 'https://ldfeumcasypgprhtbvpp.supabase.co';
 //   window.SUPABASE_ANON_KEY = 'sb_publishable_vXEIEUWtBo9osE15js3mBA_s_Dm0Uwl';
 // </script>
-const DEFAULT_SUPABASE_URL = 'https://zgpitqqdhbsfvktmqpyw.supabase.co';
-const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpncGl0cXFkaGJzZnZrdG1xcHl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMjQ2MDAsImV4cCI6MjA3OTYwMDYwMH0.IkUWNpX7IyfT_GhLoJ2rqp7DbzqtkXXcBFR8marULGc';
+const DEFAULT_SUPABASE_URL = 'https://ermkgvzfehlaaoktxndv.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVybWtndnpmZWhsYWFva3R4bmR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMjk2MzYsImV4cCI6MjA3OTYwNTYzNn0.4WBtLgvjVeOgrznXkQa7W6aa4vFWgBvd3gIPXoIrVRI';
 
 const SUPABASE_URL = (typeof window !== 'undefined' && window.SUPABASE_URL) || DEFAULT_SUPABASE_URL;
 const SUPABASE_ANON_KEY = (typeof window !== 'undefined' && window.SUPABASE_ANON_KEY) || DEFAULT_SUPABASE_ANON_KEY;
@@ -91,8 +91,8 @@ function initSupabase() {
     // Try different ways the Supabase library might be exposed
     let createClient = null;
     
-    // Method 1: Check for Supabase UMD build (most common)
-    // The UMD build typically exposes it as window.supabase or a global supabase
+    // Method 1: Check for Supabase UMD build (v2) - most common
+    // The UMD build from jsdelivr exposes it as window.supabase.createClient
     if (typeof window.supabase !== 'undefined') {
         if (typeof window.supabase.createClient === 'function') {
             createClient = window.supabase.createClient;
@@ -113,15 +113,22 @@ function initSupabase() {
             createClient = supabaseModule.default.createClient;
         }
     }
+    // Method 4: Check if Supabase is available as a global function (some builds)
+    else if (typeof window.supabase !== 'undefined' && typeof window.supabase === 'function') {
+        createClient = window.supabase;
+    }
     
     // If we found createClient, initialize
     if (createClient) {
         try {
             supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             console.log('✅ Supabase client initialized successfully');
+            console.log('   URL:', SUPABASE_URL);
             return;
         } catch (error) {
             console.error('❌ Failed to initialize Supabase client:', error);
+            console.error('   URL:', SUPABASE_URL);
+            console.error('   Error details:', error.message);
             return;
         }
     }
@@ -130,28 +137,53 @@ function initSupabase() {
     setTimeout(() => {
         if (supabase) return; // Already initialized
         
-        // Try again with same checks
+        // Try all methods again with more detailed logging
+        console.log('🔍 Retrying Supabase initialization...');
+        console.log('   window.supabase type:', typeof window.supabase);
+        console.log('   window.supabase:', window.supabase);
+        
+        // Method 1: window.supabase.createClient
         if (typeof window.supabase !== 'undefined') {
             if (typeof window.supabase.createClient === 'function') {
                 try {
                     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    console.log('✅ Supabase client initialized (delayed)');
+                    console.log('✅ Supabase client initialized (delayed - method 1)');
                     return;
                 } catch (error) {
-                    console.error('❌ Failed to initialize Supabase client (delayed):', error);
+                    console.error('❌ Failed to initialize Supabase client (delayed - method 1):', error);
                 }
+            } else if (window.supabase.default && typeof window.supabase.default.createClient === 'function') {
+                try {
+                    supabase = window.supabase.default.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log('✅ Supabase client initialized (delayed - method 1b)');
+                    return;
+                } catch (error) {
+                    console.error('❌ Failed to initialize Supabase client (delayed - method 1b):', error);
+                }
+            }
+        }
+        
+        // Method 2: global supabase
+        if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
+            try {
+                supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('✅ Supabase client initialized (delayed - method 2)');
+                return;
+            } catch (error) {
+                console.error('❌ Failed to initialize Supabase client (delayed - method 2):', error);
             }
         }
         
         // If still not initialized, show helpful error
         if (!supabase) {
-            console.error('❌ Supabase library not found!');
+            console.error('❌ Supabase library not found after retry!');
             console.error('   Make sure you have included this BEFORE storage.js:');
             console.error('   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>');
             console.error('   Current SUPABASE_URL:', SUPABASE_URL);
             console.error('   Check browser Network tab to see if Supabase script loaded successfully.');
+            console.error('   Check browser Console for any script loading errors.');
         }
-    }, 500);
+    }, 1000); // Increased delay to 1 second
 }
 
 // Initialize on load
