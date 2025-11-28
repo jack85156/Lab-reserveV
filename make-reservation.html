@@ -338,6 +338,41 @@
             return `${year}-${month}-${day}`;
         }
         
+        // Helper function to get current time in Central Time Zone (US)
+        // Returns an object with { hours, minutes } in 24-hour format
+        function getCentralTime() {
+            const now = new Date();
+            // Convert to Central Time using Intl.DateTimeFormat
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'America/Chicago',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            const parts = formatter.formatToParts(now);
+            const hours = parseInt(parts.find(part => part.type === 'hour').value);
+            const minutes = parseInt(parts.find(part => part.type === 'minute').value);
+            return { hours, minutes };
+        }
+        
+        // Helper function to round up to next 30-minute interval
+        // If current time is 10:50 PM, round up to 11:00 PM (23:00)
+        // If current time is 10:20 PM, round up to 10:30 PM (22:30)
+        function roundUpToNext30Min(hours, minutes) {
+            let roundedHours = hours;
+            let roundedMinutes = minutes;
+            
+            if (minutes > 0 && minutes <= 30) {
+                roundedMinutes = 30;
+            } else if (minutes > 30) {
+                roundedMinutes = 0;
+                roundedHours = (hours + 1) % 24;
+            }
+            // If minutes is 0, keep it as is
+            
+            return { hours: roundedHours, minutes: roundedMinutes };
+        }
+        
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const instrument = urlParams.get('instrument');
@@ -456,12 +491,23 @@
                 endHourSelect.innerHTML += `<option value="${hour}">${hour}</option>`;
             }
             
-            // Function to update time options (no time limitations - only end time must be after start time)
+            // Function to update time options
+            // Restricts times based on current Central Time if date is today
             function updateTimeOptions() {
                 const startHourSelect = document.getElementById('startTimeHour');
                 const startMinuteSelect = document.getElementById('startTimeMinute');
                 const endHourSelect = document.getElementById('endTimeHour');
                 const endMinuteSelect = document.getElementById('endTimeMinute');
+                const dateInput = document.getElementById('date');
+                const selectedDate = dateInput.value;
+                
+                // Get today's date and current time in Central Time
+                const todayString = getCentralDateString();
+                const currentTime = getCentralTime();
+                const isToday = selectedDate === todayString;
+                
+                // Round up current time to next 30-minute interval
+                const minTime = isToday ? roundUpToNext30Min(currentTime.hours, currentTime.minutes) : null;
                 
                 // Enable all options first
                 [startHourSelect, startMinuteSelect, endHourSelect, endMinuteSelect].forEach(select => {
@@ -473,7 +519,37 @@
                     });
                 });
                 
-                // Only restriction: end time must be after start time
+                // If today, disable past time slots
+                if (isToday && minTime) {
+                    // Disable start hour options before minimum hour
+                    Array.from(startHourSelect.options).forEach(option => {
+                        if (option.value !== '') {
+                            const hour = parseInt(option.value);
+                            if (hour < minTime.hours) {
+                                option.disabled = true;
+                                option.style.color = '#999';
+                            } else if (hour === minTime.hours) {
+                                // For the minimum hour, disable minutes before minimum minute
+                                // This will be handled in the minute select
+                            }
+                        }
+                    });
+                    
+                    // Disable start minute options for the minimum hour
+                    if (startHourSelect.value === String(minTime.hours).padStart(2, '0')) {
+                        Array.from(startMinuteSelect.options).forEach(option => {
+                            if (option.value !== '') {
+                                const minute = parseInt(option.value);
+                                if (minute < minTime.minutes) {
+                                    option.disabled = true;
+                                    option.style.color = '#999';
+                                }
+                            }
+                        });
+                    }
+                }
+                
+                // Restriction: end time must be after start time
                 const selectedStartTime = document.getElementById('startTime').value;
                 if (selectedStartTime) {
                     const [startH, startM] = selectedStartTime.split(':').map(Number);
@@ -511,6 +587,17 @@
                             }
                         });
                     }
+                } else if (isToday && minTime) {
+                    // If no start time selected yet, but it's today, also restrict end time
+                    Array.from(endHourSelect.options).forEach(option => {
+                        if (option.value !== '') {
+                            const hour = parseInt(option.value);
+                            if (hour < minTime.hours) {
+                                option.disabled = true;
+                                option.style.color = '#999';
+                            }
+                        }
+                    });
                 }
             }
             
@@ -529,6 +616,8 @@
             
             // Add event listeners for time dropdowns
             document.getElementById('startTimeHour').addEventListener('change', function() {
+                // Clear start time when hour changes to force re-validation
+                document.getElementById('startTime').value = '';
                 updateTimeOptions(); // Update options when hour changes
                 updateTimeInput(this, document.getElementById('startTimeMinute'), document.getElementById('startTime'));
             });
@@ -629,9 +718,29 @@
                 dateInput.setCustomValidity('');
             }
             
-            // No time limitations - clear any time validation
-            startTimeInput.setCustomValidity('');
-            if (endTimeInput) endTimeInput.setCustomValidity('');
+            // Check if date is today - if so, validate times are not in the past
+            if (selectedDate === todayString) {
+                const currentTime = getCentralTime();
+                const minTime = roundUpToNext30Min(currentTime.hours, currentTime.minutes);
+                
+                if (startTime) {
+                    const [startH, startM] = startTime.split(':').map(Number);
+                    const startMinutes = startH * 60 + startM;
+                    const minMinutes = minTime.hours * 60 + minTime.minutes;
+                    
+                    if (startMinutes < minMinutes) {
+                        startTimeInput.setCustomValidity(`Start time must be at or after ${String(minTime.hours).padStart(2, '0')}:${String(minTime.minutes).padStart(2, '0')} (current time in Central Time)`);
+                        startTimeInput.reportValidity();
+                        return;
+                    } else {
+                        startTimeInput.setCustomValidity('');
+                    }
+                }
+            } else {
+                // Not today, clear time validation
+                startTimeInput.setCustomValidity('');
+                if (endTimeInput) endTimeInput.setCustomValidity('');
+            }
             
             // Check if end time is after start time
             if (startTime && endTime) {
@@ -674,14 +783,29 @@
             
             const trimmedName = name.trim();
             
-            // Get today's date in Central Time Zone
+            // Get today's date and current time in Central Time Zone
             const todayString = getCentralDateString();
+            const currentTime = getCentralTime();
             
             // Check if date is in the past (compare as strings)
             // Allow today and future dates, block only past dates
             if (date < todayString) {
                 alert('Cannot make reservations for past dates. Please select today or a future date.');
                 return;
+            }
+            
+            // If date is today, validate that start time is not in the past
+            if (date === todayString) {
+                const minTime = roundUpToNext30Min(currentTime.hours, currentTime.minutes);
+                const [startH, startM] = startTime.split(':').map(Number);
+                const startMinutes = startH * 60 + startM;
+                const minMinutes = minTime.hours * 60 + minTime.minutes;
+                
+                if (startMinutes < minMinutes) {
+                    const minTimeStr = `${String(minTime.hours).padStart(2, '0')}:${String(minTime.minutes).padStart(2, '0')}`;
+                    alert(`Cannot make reservations for past times. The current time is ${String(currentTime.hours).padStart(2, '0')}:${String(currentTime.minutes).padStart(2, '0')} (Central Time). Please select a start time at or after ${minTimeStr}.`);
+                    return;
+                }
             }
             
             // Validate 30-minute intervals
