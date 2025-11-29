@@ -1,9 +1,18 @@
 // Supabase Configuration
-// Your Supabase project credentials are configured below
+// This file is optional - if you want to override the default credentials,
+// uncomment and set your values here:
+//
+// window.SUPABASE_URL = 'https://your-project-id.supabase.co';
+// window.SUPABASE_ANON_KEY = 'your-anon-key';
+//
+// Otherwise, the default credentials in storage.js will be used.
 
-window.SUPABASE_URL = 'https://ermkgvzfehlaaoktxndv.supabase.co';
-window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVybWtndnpmZWhsYWFva3R4bmR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMjk2MzYsImV4cCI6MjA3OTYwNTYzNn0.4WBtLgvjVeOgrznXkQa7W6aa4vFWgBvd3gIPXoIrVRI';
+// Leave this file empty to use defaults from storage.js
 
-// ✅ Configuration complete! Your Supabase credentials are now set up.
-// The system will now use Supabase cloud database for storing reservations.
+
+
+
+
+
+
 

@@ -1134,7 +1134,7 @@
 
                 
 
-                const reservations = await Storage.getReservations();
+                let reservations = await Storage.getReservations();
 
                 
 
@@ -1149,6 +1149,68 @@
                 }
 
                 
+
+                // Automatically remove expired reservations before filtering
+                const hasExpirationHelper = typeof Storage.isReservationExpired === 'function';
+                function isReservationExpiredLocal(reservation) {
+                    if (hasExpirationHelper) {
+                        try {
+                            return Storage.isReservationExpired(reservation);
+                        } catch (error) {
+                            console.error('Storage.isReservationExpired failed:', error);
+                        }
+                    }
+                    try {
+                        if (!reservation.date || !reservation.endTime) return false;
+                        const [year, month, day] = reservation.date.split('-').map(Number);
+                        const [endHour, endMinute] = (reservation.endTime || '00:00').split(':').map(Number);
+                        const now = new Date();
+                        const nowCentralStr = now.toLocaleString('en-US', {
+                            timeZone: 'America/Chicago',
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                        });
+                        const [nowDatePart, nowTimePart] = nowCentralStr.split(', ');
+                        const [nowMonth, nowDay, nowYear] = nowDatePart.split('/').map(Number);
+                        const [nowHour, nowMinute] = nowTimePart.split(':').map(Number);
+                        const reservationTime = parseInt(
+                            `${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}${String(endHour).padStart(2, '0')}${String(endMinute).padStart(2, '0')}`
+                        );
+                        const currentTime = parseInt(
+                            `${nowYear}${String(nowMonth).padStart(2, '0')}${String(nowDay).padStart(2, '0')}${String(nowHour).padStart(2, '0')}${String(nowMinute).padStart(2, '0')}`
+                        );
+                        return reservationTime < currentTime;
+                    } catch (error) {
+                        console.error('Unable to determine if reservation expired:', error, reservation);
+                        return false;
+                    }
+                }
+
+                const expiredReservations = [];
+                const activeReservations = [];
+                reservations.forEach(reservation => {
+                    if (isReservationExpiredLocal(reservation)) {
+                        expiredReservations.push(reservation);
+                    } else {
+                        activeReservations.push(reservation);
+                    }
+                });
+
+                if (expiredReservations.length > 0) {
+                    console.warn('Removing expired reservations:', expiredReservations);
+                    try {
+                        await Storage.updateReservations(activeReservations);
+                    } catch (error) {
+                        console.error('Failed to persist removal of expired reservations:', error);
+                    }
+                }
+
+                reservations = activeReservations;
 
                 // Filter by name if provided
 

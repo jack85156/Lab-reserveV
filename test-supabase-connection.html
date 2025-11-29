@@ -3,389 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supabase Connection Test - Dr. V's Lab</title>
+    <title>Supabase Connection Test</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        
-        .container {
+            font-family: Arial, sans-serif;
             max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 30px;
-        }
-        
-        h1 {
-            color: #000;
-            margin-bottom: 20px;
-        }
-        
-        .test-section {
-            margin-bottom: 30px;
+            margin: 50px auto;
             padding: 20px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            background: #f5f5f5;
         }
-        
-        .test-section h2 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .status {
-            padding: 10px;
-            border-radius: 4px;
+        .test-result {
+            background: white;
+            padding: 20px;
             margin: 10px 0;
-            font-weight: 600;
+            border-radius: 8px;
+            border-left: 4px solid #ccc;
         }
-        
-        .status.success {
+        .test-result.success {
+            border-left-color: #28a745;
             background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
         }
-        
-        .status.error {
+        .test-result.error {
+            border-left-color: #dc3545;
             background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
         }
-        
-        .status.warning {
+        .test-result.warning {
+            border-left-color: #ffc107;
             background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
         }
-        
-        .status.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-        
-        button {
-            background: #000;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 4px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            margin: 10px 5px 10px 0;
-        }
-        
-        button:hover {
-            background: #333;
-        }
-        
         pre {
             background: #f8f9fa;
-            padding: 15px;
+            padding: 10px;
             border-radius: 4px;
             overflow-x: auto;
-            font-size: 0.9em;
-            border: 1px solid #e0e0e0;
-        }
-        
-        .hidden {
-            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🔍 Supabase Connection Diagnostic Tool</h1>
-        <p>This tool will help you diagnose why Supabase isn't connecting.</p>
-        
-        <div class="test-section">
-            <h2>Step 1: Configuration Check</h2>
-            <div id="configStatus"></div>
-            <button onclick="checkConfiguration()">Check Configuration</button>
-        </div>
-        
-        <div class="test-section">
-            <h2>Step 2: Library Loading Check</h2>
-            <div id="libraryStatus"></div>
-            <button onclick="checkLibrary()">Check Library</button>
-        </div>
-        
-        <div class="test-section">
-            <h2>Step 3: Connection Test</h2>
-            <div id="connectionStatus"></div>
-            <button onclick="testConnection()">Test Connection</button>
-        </div>
-        
-        <div class="test-section">
-            <h2>Step 4: Database Table Check</h2>
-            <div id="tableStatus"></div>
-            <button onclick="checkTable()">Check Table</button>
-        </div>
-        
-        <div class="test-section">
-            <h2>Full Diagnostic Report</h2>
-            <button onclick="runFullDiagnostic()">Run All Tests</button>
-            <div id="fullReport" class="hidden" style="margin-top: 20px;"></div>
-        </div>
-    </div>
-    
-    <!-- Load Supabase configuration and library -->
-    <script src="supabase-config.js"></script>
+    <h1>🔍 Supabase Connection Diagnostic Test</h1>
+    <div id="results"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="storage.js"></script>
-    
     <script>
-        function showStatus(elementId, message, type) {
-            const element = document.getElementById(elementId);
-            element.innerHTML = `<div class="status ${type}">${message}</div>`;
-        }
+        const resultsDiv = document.getElementById('results');
         
-        function checkConfiguration() {
-            const url = window.SUPABASE_URL;
-            const key = window.SUPABASE_ANON_KEY;
-            
-            if (!url || !key) {
-                showStatus('configStatus', 
-                    '❌ ERROR: Supabase credentials not found!<br>' +
-                    'Make sure supabase-config.js is loaded and has your credentials.',
-                    'error');
-                return;
-            }
-            
-            if (url.includes('your-project-id') || key.includes('your-anon-key')) {
-                showStatus('configStatus',
-                    '⚠️ WARNING: Credentials are still placeholders!<br>' +
-                    'You need to replace the placeholder values in supabase-config.js with your actual Supabase credentials.<br>' +
-                    'Get them from: Supabase Dashboard → Settings → API',
-                    'warning');
-                return;
-            }
-            
-            showStatus('configStatus',
-                '✅ Configuration found!<br>' +
-                `URL: ${url.substring(0, 30)}...<br>` +
-                `Key: ${key.substring(0, 20)}... (hidden)`,
-                'success');
+        function addResult(title, message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<h3>${title}</h3><pre>${message}</pre>`;
+            resultsDiv.appendChild(div);
         }
-        
-        function checkLibrary() {
-            // Check different ways Supabase might be exposed
-            let found = false;
-            let method = '';
-            
+
+        async function runTests() {
+            // Test 1: Check if Supabase library loaded
+            addResult('Test 1: Supabase Library Check', 
+                `window.supabase type: ${typeof window.supabase}\n` +
+                `window.supabase: ${JSON.stringify(window.supabase, null, 2).substring(0, 200)}...`,
+                typeof window.supabase !== 'undefined' ? 'success' : 'error'
+            );
+
+            // Test 2: Check if createClient is available
+            let createClientAvailable = false;
             if (typeof window.supabase !== 'undefined') {
                 if (typeof window.supabase.createClient === 'function') {
-                    found = true;
-                    method = 'window.supabase.createClient';
-                } else if (window.supabase.default && typeof window.supabase.default.createClient === 'function') {
-                    found = true;
-                    method = 'window.supabase.default.createClient';
+                    createClientAvailable = true;
+                    addResult('Test 2: createClient Function', 
+                        '✅ Found: window.supabase.createClient',
+                        'success'
+                    );
+                } else {
+                    addResult('Test 2: createClient Function', 
+                        '❌ window.supabase.createClient is not a function\n' +
+                        `Available properties: ${Object.keys(window.supabase).join(', ')}`,
+                        'error'
+                    );
                 }
-            }
-            
-            if (!found && typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
-                found = true;
-                method = 'global supabase.createClient';
-            }
-            
-            if (found) {
-                showStatus('libraryStatus',
-                    `✅ Supabase library loaded!<br>Found via: ${method}`,
-                    'success');
             } else {
-                showStatus('libraryStatus',
-                    '❌ ERROR: Supabase library not found!<br>' +
-                    'Make sure this script tag is in your HTML BEFORE storage.js:<br>' +
-                    '&lt;script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"&gt;&lt;/script&gt;',
-                    'error');
+                addResult('Test 2: createClient Function', 
+                    '❌ window.supabase is undefined',
+                    'error'
+                );
             }
-        }
-        
-        async function testConnection() {
-            showStatus('connectionStatus', '⏳ Testing connection...', 'info');
+
+            // Test 3: Check credentials
+            const DEFAULT_SUPABASE_URL = 'https://ermkgvzfehlaaoktxndv.supabase.co';
+            const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVybWtndnpmZWhsYWFva3R4bmR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMjk2MzYsImV4cCI6MjA3OTYwNTYzNn0.4WBtLgvjVeOgrznXkQa7W6aa4vFWgBvd3gIPXoIrVRI';
             
-            try {
-                const url = window.SUPABASE_URL;
-                const key = window.SUPABASE_ANON_KEY;
-                
-                if (!url || !key || url.includes('your-project-id') || key.includes('your-anon-key')) {
-                    showStatus('connectionStatus',
-                        '❌ Cannot test: Credentials not configured properly.',
-                        'error');
-                    return;
-                }
-                
-                // Try to create a Supabase client
-                let client = null;
-                if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
-                    client = window.supabase.createClient(url, key);
-                } else if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
-                    client = supabase.createClient(url, key);
-                } else {
-                    showStatus('connectionStatus',
-                        '❌ Cannot test: Supabase library not loaded.',
-                        'error');
-                    return;
-                }
-                
-                // Try a simple query
-                const { data, error } = await client.from('bookings').select('count').limit(1);
-                
-                if (error) {
-                    showStatus('connectionStatus',
-                        `❌ Connection failed!<br>Error: ${error.message}<br><br>` +
-                        `Possible causes:<br>` +
-                        `- Table 'reservations' doesn't exist (run SQL to create it)<br>` +
-                        `- Wrong credentials<br>` +
-                        `- Network/firewall blocking connection`,
-                        'error');
-                } else {
-                    showStatus('connectionStatus',
-                        '✅ Connection successful!<br>Supabase is working correctly.',
-                        'success');
-                }
-            } catch (error) {
-                showStatus('connectionStatus',
-                    `❌ Connection test failed!<br>Error: ${error.message}`,
-                    'error');
-            }
-        }
-        
-        async function checkTable() {
-            showStatus('tableStatus', '⏳ Checking table...', 'info');
+            const SUPABASE_URL = (typeof window !== 'undefined' && window.SUPABASE_URL) || DEFAULT_SUPABASE_URL;
+            const SUPABASE_ANON_KEY = (typeof window !== 'undefined' && window.SUPABASE_ANON_KEY) || DEFAULT_SUPABASE_ANON_KEY;
             
-            try {
-                const url = window.SUPABASE_URL;
-                const key = window.SUPABASE_ANON_KEY;
-                
-                if (!url || !key || url.includes('your-project-id') || key.includes('your-anon-key')) {
-                    showStatus('tableStatus',
-                        '❌ Cannot check: Credentials not configured.',
-                        'error');
-                    return;
-                }
-                
-                let client = null;
-                if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
-                    client = window.supabase.createClient(url, key);
-                } else if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
-                    client = supabase.createClient(url, key);
-                } else {
-                    showStatus('tableStatus',
-                        '❌ Cannot check: Supabase library not loaded.',
-                        'error');
-                    return;
-                }
-                
-                // Try to query the table
-                const { data, error } = await client.from('bookings').select('*').limit(1);
-                
-                if (error) {
-                    if (error.message.includes('does not exist') || error.code === '42P01') {
-                        showStatus('tableStatus',
-                            '❌ Table does not exist!<br><br>' +
-                            'You need to create the bookings table.<br>' +
-                            'Go to Supabase Dashboard → SQL Editor and run the SQL from SUPABASE_SETUP.md',
-                            'error');
-                    } else {
-                        showStatus('tableStatus',
-                            `❌ Error checking table: ${error.message}`,
-                            'error');
-                    }
-                } else {
-                    showStatus('tableStatus',
-                        '✅ Table exists and is accessible!<br>' +
-                        `Found ${data ? data.length : 0} test record(s).`,
-                        'success');
-                }
-            } catch (error) {
-                showStatus('tableStatus',
-                    `❌ Error: ${error.message}`,
-                    'error');
-            }
-        }
-        
-        async function runFullDiagnostic() {
-            const report = document.getElementById('fullReport');
-            report.classList.remove('hidden');
-            report.innerHTML = '<h3>Running full diagnostic...</h3><pre>Loading...</pre>';
-            
-            let results = [];
-            
-            // Test 1: Configuration
-            results.push('=== Configuration Check ===');
-            const url = window.SUPABASE_URL;
-            const key = window.SUPABASE_ANON_KEY;
-            
-            if (!url || !key) {
-                results.push('❌ FAIL: Credentials not found');
-            } else if (url.includes('your-project-id') || key.includes('your-anon-key')) {
-                results.push('❌ FAIL: Credentials are placeholders');
-            } else {
-                results.push('✅ PASS: Credentials configured');
-            }
-            
-            // Test 2: Library
-            results.push('\n=== Library Check ===');
-            let libFound = false;
-            if (typeof window.supabase !== 'undefined') {
-                libFound = true;
-                results.push('✅ PASS: Library loaded (window.supabase)');
-            } else if (typeof supabase !== 'undefined') {
-                libFound = true;
-                results.push('✅ PASS: Library loaded (global supabase)');
-            } else {
-                results.push('❌ FAIL: Library not found');
-            }
-            
-            // Test 3: Connection
-            if (libFound && url && key && !url.includes('your-project-id')) {
-                results.push('\n=== Connection Test ===');
+            addResult('Test 3: Credentials Check', 
+                `URL: ${SUPABASE_URL}\n` +
+                `Key: ${SUPABASE_ANON_KEY.substring(0, 50)}...\n` +
+                `URL valid: ${SUPABASE_URL && !SUPABASE_URL.includes('your-project-id')}\n` +
+                `Key valid: ${SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('your-anon-key')}`,
+                (SUPABASE_URL && SUPABASE_ANON_KEY && 
+                 !SUPABASE_URL.includes('your-project-id') && 
+                 !SUPABASE_ANON_KEY.includes('your-anon-key')) ? 'success' : 'warning'
+            );
+
+            // Test 4: Try to create client
+            if (createClientAvailable && SUPABASE_URL && SUPABASE_ANON_KEY) {
                 try {
-                    let client = null;
-                    if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
-                        client = window.supabase.createClient(url, key);
-                    } else if (typeof supabase !== 'undefined' && typeof supabase.createClient === 'function') {
-                        client = supabase.createClient(url, key);
-                    }
-                    
-                    if (client) {
-                        const { error } = await client.from('bookings').select('count').limit(1);
-                        if (error) {
-                            results.push(`❌ FAIL: ${error.message}`);
-                        } else {
-                            results.push('✅ PASS: Connection successful');
+                    const testClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    addResult('Test 4: Client Creation', 
+                        '✅ Client created successfully\n' +
+                        `Client type: ${typeof testClient}\n` +
+                        `Client methods: ${Object.keys(testClient).slice(0, 10).join(', ')}...`,
+                        'success'
+                    );
+
+                    // Test 5: Try to connect to database
+                    try {
+                        // First, test if we can reach the Supabase API endpoint
+                        let apiReachable = false;
+                        try {
+                            const healthCheck = await fetch(`${SUPABASE_URL}/rest/v1/`, {
+                                method: 'HEAD',
+                                headers: {
+                                    'apikey': SUPABASE_ANON_KEY,
+                                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                                }
+                            });
+                            apiReachable = healthCheck.ok || healthCheck.status < 500;
+                            addResult('Test 5a: API Reachability', 
+                                `Status: ${healthCheck.status}\n` +
+                                `Reachable: ${apiReachable}\n` +
+                                `URL: ${SUPABASE_URL}/rest/v1/`,
+                                apiReachable ? 'success' : 'warning'
+                            );
+                        } catch (fetchError) {
+                            addResult('Test 5a: API Reachability', 
+                                `❌ Cannot reach Supabase API:\n${fetchError.message}\n\n` +
+                                `Possible causes:\n` +
+                                `1. Supabase project is paused - Check Supabase Dashboard\n` +
+                                `2. Network/firewall blocking - Check your internet connection\n` +
+                                `3. CORS issue - Add http://localhost:8000 to Supabase CORS settings\n` +
+                                `4. Wrong Supabase URL - Verify in Supabase Dashboard → Settings → API`,
+                                'error'
+                            );
                         }
+
+                        // Now try the database query
+                        const { data, error } = await testClient
+                            .from('bookings')
+                            .select('id')
+                            .limit(1);
+                        
+                        if (error) {
+                            let errorDetails = `❌ Error connecting to database:\n${JSON.stringify(error, null, 2)}\n\n`;
+                            
+                            if (error.code === '42P01') {
+                                errorDetails += `⚠️ Table 'bookings' does not exist!\n`;
+                                errorDetails += `Fix: Create the table in Supabase Dashboard → SQL Editor\n`;
+                            } else if (error.code === '42501') {
+                                errorDetails += `⚠️ Permission denied!\n`;
+                                errorDetails += `Fix: Check Row Level Security (RLS) policies in Supabase Dashboard\n`;
+                            } else if (error.message && error.message.includes('Failed to fetch')) {
+                                errorDetails += `⚠️ Network/CORS issue!\n`;
+                                errorDetails += `Fix: Add http://localhost:8000 to Supabase CORS settings:\n`;
+                                errorDetails += `   1. Go to Supabase Dashboard → Settings → API\n`;
+                                errorDetails += `   2. Under "CORS Configuration", add: http://localhost:8000\n`;
+                                errorDetails += `   3. Or use * for development (less secure)\n`;
+                            }
+                            
+                            addResult('Test 5: Database Connection', errorDetails, 'error');
+                        } else {
+                            addResult('Test 5: Database Connection', 
+                                `✅ Successfully connected to database!\n` +
+                                `Response: ${JSON.stringify(data, null, 2)}`,
+                                'success'
+                            );
+                        }
+                    } catch (dbError) {
+                        let errorDetails = `❌ Exception connecting to database:\n${dbError.message}\n\n`;
+                        
+                        if (dbError.message.includes('Failed to fetch')) {
+                            errorDetails += `⚠️ This is a network/CORS issue!\n\n`;
+                            errorDetails += `How to fix:\n`;
+                            errorDetails += `1. Go to Supabase Dashboard → Settings → API\n`;
+                            errorDetails += `2. Under "CORS Configuration", add: http://localhost:8000\n`;
+                            errorDetails += `3. Save and try again\n\n`;
+                            errorDetails += `Alternative: Check if your Supabase project is paused\n`;
+                            errorDetails += `- Go to Supabase Dashboard\n`;
+                            errorDetails += `- Make sure project status is "Active" (not "Paused")\n`;
+                        }
+                        
+                        errorDetails += `\nFull error: ${dbError.stack}`;
+                        addResult('Test 5: Database Connection', errorDetails, 'error');
                     }
-                } catch (error) {
-                    results.push(`❌ FAIL: ${error.message}`);
+                } catch (clientError) {
+                    addResult('Test 4: Client Creation', 
+                        `❌ Failed to create client:\n${clientError.message}\n${clientError.stack}`,
+                        'error'
+                    );
                 }
+            } else {
+                addResult('Test 4: Client Creation', 
+                    '⏭️ Skipped (prerequisites not met)',
+                    'warning'
+                );
             }
-            
-            report.innerHTML = '<h3>Diagnostic Report</h3><pre>' + results.join('\n') + '</pre>';
+
+            // Test 6: Check Storage object
+            if (typeof Storage !== 'undefined' && Storage) {
+                addResult('Test 6: Storage Object', 
+                    `✅ Storage object available\n` +
+                    `Methods: ${Object.keys(Storage).join(', ')}`,
+                    'success'
+                );
+
+                // Test 7: Try to get reservations
+                try {
+                    const reservations = await Storage.getReservations();
+                    addResult('Test 7: Get Reservations', 
+                        `✅ Successfully retrieved reservations\n` +
+                        `Count: ${reservations.length}\n` +
+                        `Storage type: ${Storage.storageType || 'unknown'}`,
+                        'success'
+                    );
+                } catch (storageError) {
+                    addResult('Test 7: Get Reservations', 
+                        `❌ Failed to get reservations:\n${storageError.message}\n${storageError.stack}`,
+                        'error'
+                    );
+                }
+            } else {
+                addResult('Test 6: Storage Object', 
+                    '❌ Storage object not available',
+                    'error'
+                );
+            }
         }
-        
-        // Auto-run configuration check on load
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                checkConfiguration();
-                checkLibrary();
-            }, 500);
+
+        // Run tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 500); // Wait a bit for scripts to load
         });
     </script>
 </body>
 </html>
+
+
+
+
 
