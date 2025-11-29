@@ -213,7 +213,7 @@ const Storage = {
                     .from(RESERVATIONS_TABLE)
                     .select('*')
                     .order('date', { ascending: true })
-                    .order('startTime', { ascending: true });
+                    .order('start_time', { ascending: true });  // Use database column name
                 
                 if (error) {
                     console.error('Supabase error:', error);
@@ -234,7 +234,17 @@ const Storage = {
                 console.log('Supabase returned data:', data?.length || 0, 'reservations');
                 
                 // Ensure we have an array
-                const reservations = Array.isArray(data) ? data : [];
+                const rawReservations = Array.isArray(data) ? data : [];
+                
+                // Map database column names to form field names for consistency
+                const reservations = rawReservations.map(r => ({
+                    id: r.id,
+                    instrument: r.instrument,
+                    name: r.user_name,  // Map 'user_name' to 'name'
+                    date: r.date,
+                    startTime: r.start_time,  // Map 'start_time' to 'startTime'
+                    endTime: r.end_time  // Map 'end_time' to 'endTime'
+                }));
                 
                 // Check for reservations with missing names
                 const missingNames = reservations.filter(r => !r.name || !r.name.trim());
@@ -363,9 +373,25 @@ const Storage = {
                 // Ensure name is a string and trimmed
                 reservation.name = String(reservation.name).trim();
                 
+                // Map form field names to database column names
+                const dbReservation = {
+                    instrument: reservation.instrument,
+                    user_name: reservation.name,  // Map 'name' to 'user_name'
+                    date: reservation.date,
+                    start_time: reservation.startTime,  // Map 'startTime' to 'start_time'
+                    end_time: reservation.endTime  // Map 'endTime' to 'end_time'
+                };
+                
+                // Add id if it exists
+                if (reservation.id) {
+                    dbReservation.id = reservation.id;
+                }
+                
+                console.log('Mapped reservation for database:', dbReservation);
+                
                 const { data, error } = await supabase
                     .from(RESERVATIONS_TABLE)
-                    .insert([reservation])
+                    .insert([dbReservation])
                     .select()
                     .single();
                 
@@ -376,12 +402,22 @@ const Storage = {
                 
                 console.log('Supabase saved reservation:', data);
                 
+                // Map database column names back to form field names for consistency
+                const mappedData = {
+                    id: data.id,
+                    instrument: data.instrument,
+                    name: data.user_name,  // Map 'user_name' back to 'name'
+                    date: data.date,
+                    startTime: data.start_time,  // Map 'start_time' back to 'startTime'
+                    endTime: data.end_time  // Map 'end_time' back to 'endTime'
+                };
+                
                 // Verify the saved reservation has the name
-                if (data && data.name !== reservation.name) {
-                    console.warn('Name mismatch after save! Original:', reservation.name, 'Saved:', data.name);
+                if (mappedData.name !== reservation.name) {
+                    console.warn('Name mismatch after save! Original:', reservation.name, 'Saved:', mappedData.name);
                 }
                 
-                return data;
+                return mappedData;
             } catch (error) {
                 console.error('❌ ERROR: Failed to save reservation to Supabase:', error);
                 console.error('Error details:', {
@@ -503,11 +539,21 @@ const Storage = {
                     throw deleteError;
                 }
                 
-                // Insert all reservations
+                // Insert all reservations (map field names)
                 if (reservations.length > 0) {
+                    // Map form field names to database column names
+                    const dbReservations = reservations.map(r => ({
+                        id: r.id,
+                        instrument: r.instrument,
+                        user_name: r.name,  // Map 'name' to 'user_name'
+                        date: r.date,
+                        start_time: r.startTime,  // Map 'startTime' to 'start_time'
+                        end_time: r.endTime  // Map 'endTime' to 'end_time'
+                    }));
+                    
                     const { error: insertError } = await supabase
                         .from(RESERVATIONS_TABLE)
-                        .insert(reservations);
+                        .insert(dbReservations);
                     
                     if (insertError) {
                         console.error('Error inserting reservations:', insertError);
