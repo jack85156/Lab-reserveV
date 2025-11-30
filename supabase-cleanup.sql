@@ -4,7 +4,7 @@
 -- How to use:
 --   1. Open Supabase Dashboard → SQL Editor.
 --   2. Paste this entire script and run it once.
---   3. A pg_cron job named "cleanup-expired-reservations" will run every 4 hours.
+--   3. A pg_cron job named "cleanup-expired-reservations" will run every 7 days (weekly on Sunday at midnight).
 --
 -- The job removes rows from public.bookings whose end time (Central Time Zone, United States)
 -- has already passed. A lightweight log table captures each run.
@@ -196,10 +196,12 @@ select cron.unschedule(jobid)
 from cron.job
 where jobname = 'cleanup-expired-reservations';
 
--- Schedule the cleanup to run every 4 hours.
+-- Schedule the cleanup to run every 7 days (weekly on Sunday at midnight UTC).
+-- Cron format: minute hour day-of-month month day-of-week
+-- '0 0 * * 0' = Sunday at 00:00 (midnight) UTC
 select cron.schedule(
     'cleanup-expired-reservations',
-    '0 */4 * * *',
+    '0 0 * * 0',
     $$select public.cleanup_expired_reservations();$$
 );
 

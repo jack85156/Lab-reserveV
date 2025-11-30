@@ -14,12 +14,12 @@ What it does:
 - Adds a helper table `reservation_cleanup_log` to record how many rows are deleted each run (purely for auditing—safe to remove if you don't want it).
 - Defines `cleanup_expired_reservations()` which safely converts each row's `date` + `endTime` into Central Time and deletes **only** rows whose end time has already passed (expired reservations). The function includes validation to ensure it never deletes active or future reservations.
 - Unschedules any previous job called `cleanup-expired-reservations` to avoid duplicates.
-- Schedules a new cron job (`0 */4 * * *`) so the cleanup runs every 4 hours.
+- Schedules a new cron job (`0 0 * * 0`) so the cleanup runs every 7 days (weekly on Sunday at midnight UTC).
 - Executes the cleanup immediately once so you see results right away.
 
 ### 2. Adjust schedule or logging (optional)
 
-If you want a different cadence, edit the crontab string inside `supabase-cleanup.sql` (e.g., `'0 */2 * * *'` for every 2 hours, or `'0 0 * * *'` for once daily at midnight).
+If you want a different cadence, edit the crontab string inside `supabase-cleanup.sql` (e.g., `'0 */4 * * *'` for every 4 hours, `'0 0 * * *'` for once daily at midnight, or `'0 0 * * 0'` for weekly on Sunday).
 
 To stop logging, remove the `reservation_cleanup_log` table and related insert in the SQL file before running it.
 
