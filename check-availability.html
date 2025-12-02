@@ -1061,7 +1061,11 @@
 
                                 const nameStyle = hasName ? '' : 'color: #dc3545; font-weight: 600;';
 
-                                const nameLink = reservationName;
+                                const nameLink = hasName 
+
+                                    ? `<a href="view-reservations.html?name=${encodeURIComponent(reservationName)}" style="color: inherit; text-decoration: underline; cursor: pointer;" title="Click to view all reservations for ${reservationName}">${reservationName}</a>`
+
+                                    : reservationName;
 
                                 
 

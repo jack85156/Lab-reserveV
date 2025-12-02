@@ -1854,7 +1854,7 @@
 
             if (nameParam) {
 
-                // Auto-search for this name
+                // Pre-fill name but require manual verification
 
                 const container = document.getElementById('reservations-container');
 
@@ -1866,11 +1866,11 @@
 
                             <h3>Enter Your Name</h3>
 
-                            <p>Searching for: <strong>${nameParam}</strong></p>
+                            <p>Please enter the name you used when making your reservation to verify your identity:</p>
 
                             <div style="display: flex; gap: 10px; max-width: 500px; margin: 20px auto;">
 
-                                <input type="text" id="searchNameInput" value="${nameParam}" style="flex: 1; padding: 12px; border: 2px solid #e9ecef; border-radius: 4px; font-size: 1em;">
+                                <input type="text" id="searchNameInput" placeholder="Enter your name" style="flex: 1; padding: 12px; border: 2px solid #e9ecef; border-radius: 4px; font-size: 1em;">
 
                                 <button id="searchButton" class="btn-primary" style="padding: 12px 24px;">Search</button>
 
@@ -1884,7 +1884,7 @@
 
                     
 
-                    // Set up event listeners and auto-search
+                    // Set up event listeners (NO auto-search - user must verify)
 
                     setTimeout(() => {
 
@@ -1925,16 +1925,6 @@
                             });
 
                         }
-
-                        
-
-                        // Auto-search after a short delay
-
-                        setTimeout(() => {
-
-                            searchReservations();
-
-                        }, 100);
 
                     }, 100);
 
