@@ -516,7 +516,14 @@
 
                 const urlParams = new URLSearchParams(window.location.search);
 
-                const instrument = urlParams.get('instrument');
+                let instrument = urlParams.get('instrument');
+                
+                // Decode URL-encoded instrument name and trim whitespace
+                if (instrument) {
+                    instrument = decodeURIComponent(instrument).trim();
+                    console.log('Raw instrument from URL:', urlParams.get('instrument'));
+                    console.log('Decoded and trimmed instrument:', instrument);
+                }
 
                 
 
@@ -572,7 +579,19 @@
 
                 console.log('All reservations:', reservations);
 
-                console.log('Reservations for instrument:', instrument, reservations.filter(r => r.instrument === instrument));
+                console.log('Looking for instrument:', instrument);
+
+                console.log('Instrument type:', typeof instrument, 'Length:', instrument?.length);
+
+                
+
+                // Debug: Log all unique instrument names in reservations
+
+                const allInstrumentNames = [...new Set(reservations.map(r => r.instrument).filter(Boolean))];
+
+                console.log('All instrument names in reservations:', allInstrumentNames);
+
+                console.log('Instrument name matches:', allInstrumentNames.map(name => ({ name, matches: name === instrument, trimmed: name?.trim() === instrument?.trim() })));
 
                 
 
@@ -590,7 +609,55 @@
 
                 // Filter reservations for this instrument and exclude expired ones
 
-                let instrumentReservations = reservations.filter(r => r.instrument === instrument);
+                // Use trimmed comparison to handle whitespace issues
+
+                const instrumentTrimmed = instrument ? instrument.trim() : '';
+
+                let instrumentReservations = reservations.filter(r => {
+
+                    const reservationInstrument = r.instrument ? String(r.instrument).trim() : '';
+
+                    const matches = reservationInstrument === instrumentTrimmed;
+
+                    if (!matches && reservationInstrument && instrumentTrimmed) {
+
+                        // Log near-matches for debugging
+
+                        if (reservationInstrument.toLowerCase().includes(instrumentTrimmed.toLowerCase()) || 
+
+                            instrumentTrimmed.toLowerCase().includes(reservationInstrument.toLowerCase())) {
+
+                            console.warn('Near-match found:', { 
+
+                                lookingFor: instrumentTrimmed, 
+
+                                found: reservationInstrument,
+
+                                reservation: r
+
+                            });
+
+                        }
+
+                    }
+
+                    return matches;
+
+                });
+
+                
+
+                console.log('Filtered reservations for instrument:', instrumentReservations.length, instrumentReservations);
+                
+                // If no reservations found, show diagnostic info
+                if (instrumentReservations.length === 0 && reservations.length > 0) {
+                    console.warn('⚠️ No reservations found for instrument:', instrument);
+                    console.warn('   Available instrument names in database:', allInstrumentNames);
+                    console.warn('   This might indicate a name mismatch. Check:');
+                    console.warn('   1. Instrument name in URL matches exactly with database');
+                    console.warn('   2. No extra whitespace or special characters');
+                    console.warn('   3. Case sensitivity (should match exactly)');
+                }
 
                 
 
@@ -732,6 +799,32 @@
 
                     
 
+                    // Show diagnostic info if there are reservations but none match this instrument
+
+                    let diagnosticMessage = '';
+
+                    if (reservations.length > 0) {
+
+                        diagnosticMessage = `
+
+                            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+
+                                <strong>🔍 Diagnostic Info:</strong><br>
+
+                                Looking for: <code>${instrument}</code><br>
+
+                                Found ${reservations.length} total reservation(s) in database, but none match this instrument name.<br>
+
+                                <small style="color: #666;">Check browser console (F12) for detailed instrument names in database.</small>
+
+                            </div>
+
+                        `;
+
+                    }
+
+                    
+
                     document.getElementById('availability-container').innerHTML = `
 
                         <div class="empty-state">
@@ -739,6 +832,8 @@
                             <h3>No Reservations Found</h3>
 
                             <p>This instrument has no reservations yet. All time slots are available!</p>
+
+                            ${diagnosticMessage}
 
                             <a href="make-reservation.html?instrument=${encodeURIComponent(instrument)}" class="btn-primary">Make a Reservation</a>
 
