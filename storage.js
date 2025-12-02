@@ -237,13 +237,16 @@ const Storage = {
                 const rawReservations = Array.isArray(data) ? data : [];
                 
                 // Map database column names to form field names for consistency
+                // Trim instrument names to avoid whitespace mismatches
                 const reservations = rawReservations.map(r => ({
                     id: r.id,
-                    instrument: r.instrument,
+                    instrument: r.instrument ? String(r.instrument).trim() : r.instrument,
                     name: r.user_name,  // Map 'user_name' to 'name'
                     date: r.date,
                     startTime: r.start_time,  // Map 'start_time' to 'startTime'
-                    endTime: r.end_time  // Map 'end_time' to 'endTime'
+                    endTime: r.end_time,  // Map 'end_time' to 'endTime'
+                    temperature: r.temperature,  // Include temperature field (for water baths)
+                    purpose: r.purpose  // Include purpose field (optional)
                 }));
                 
                 // Check for reservations with missing names
@@ -374,13 +377,22 @@ const Storage = {
                 reservation.name = String(reservation.name).trim();
                 
                 // Map form field names to database column names
+                // Trim instrument name to avoid whitespace mismatches
                 const dbReservation = {
-                    instrument: reservation.instrument,
+                    instrument: reservation.instrument ? String(reservation.instrument).trim() : reservation.instrument,
                     user_name: reservation.name,  // Map 'name' to 'user_name'
                     date: reservation.date,
                     start_time: reservation.startTime,  // Map 'startTime' to 'start_time'
                     end_time: reservation.endTime  // Map 'endTime' to 'end_time'
                 };
+                
+                // Add optional fields if they exist
+                if (reservation.temperature) {
+                    dbReservation.temperature = reservation.temperature;
+                }
+                if (reservation.purpose) {
+                    dbReservation.purpose = reservation.purpose;
+                }
                 
                 // Add id if it exists
                 if (reservation.id) {
@@ -409,7 +421,9 @@ const Storage = {
                     name: data.user_name,  // Map 'user_name' back to 'name'
                     date: data.date,
                     startTime: data.start_time,  // Map 'start_time' back to 'startTime'
-                    endTime: data.end_time  // Map 'end_time' back to 'endTime'
+                    endTime: data.end_time,  // Map 'end_time' back to 'endTime'
+                    temperature: data.temperature,  // Include temperature if present
+                    purpose: data.purpose  // Include purpose if present
                 };
                 
                 // Verify the saved reservation has the name
@@ -542,14 +556,24 @@ const Storage = {
                 // Insert all reservations (map field names)
                 if (reservations.length > 0) {
                     // Map form field names to database column names
-                    const dbReservations = reservations.map(r => ({
-                        id: r.id,
-                        instrument: r.instrument,
-                        user_name: r.name,  // Map 'name' to 'user_name'
-                        date: r.date,
-                        start_time: r.startTime,  // Map 'startTime' to 'start_time'
-                        end_time: r.endTime  // Map 'endTime' to 'end_time'
-                    }));
+                    const dbReservations = reservations.map(r => {
+                        const dbRes = {
+                            id: r.id,
+                            instrument: r.instrument,
+                            user_name: r.name,  // Map 'name' to 'user_name'
+                            date: r.date,
+                            start_time: r.startTime,  // Map 'startTime' to 'start_time'
+                            end_time: r.endTime  // Map 'endTime' to 'end_time'
+                        };
+                        // Add optional fields if they exist
+                        if (r.temperature) {
+                            dbRes.temperature = r.temperature;
+                        }
+                        if (r.purpose) {
+                            dbRes.purpose = r.purpose;
+                        }
+                        return dbRes;
+                    });
                     
                     const { error: insertError } = await supabase
                         .from(RESERVATIONS_TABLE)
