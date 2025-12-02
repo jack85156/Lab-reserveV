@@ -765,7 +765,17 @@
 
                         endTime: r.endTime,
 
-                        allKeys: Object.keys(r)
+                        temperature: r.temperature,
+
+                        temperatureType: typeof r.temperature,
+
+                        purpose: r.purpose,
+
+                        purposeType: typeof r.purpose,
+
+                        allKeys: Object.keys(r),
+
+                        rawReservation: r
 
                     });
 
@@ -1019,6 +1029,10 @@
 
                                 console.log('Reservation name:', reservation.name, 'Type:', typeof reservation.name);
 
+                                console.log('Reservation temperature:', reservation.temperature, 'Type:', typeof reservation.temperature, 'Has value:', !!reservation.temperature);
+
+                                console.log('All reservation keys:', Object.keys(reservation));
+
                                 
 
                                 // Handle missing or empty names - check multiple ways
@@ -1055,6 +1069,42 @@
 
                                 
 
+                                // Check if temperature exists and is not empty
+
+                                const hasTemperature = reservation.temperature !== undefined && 
+
+                                                       reservation.temperature !== null && 
+
+                                                       String(reservation.temperature).trim().length > 0;
+
+                                
+
+                                const temperatureDisplay = hasTemperature 
+
+                                    ? `<div class="time-slot-name" style="margin-top: 5px; font-weight: 600; color: #0066cc;">🌡️ Temperature: ${String(reservation.temperature).trim()}</div>` 
+
+                                    : '';
+
+                                
+
+                                // Check if purpose exists and is not empty
+
+                                const hasPurpose = reservation.purpose !== undefined && 
+
+                                                  reservation.purpose !== null && 
+
+                                                  String(reservation.purpose).trim().length > 0;
+
+                                
+
+                                const purposeDisplay = hasPurpose 
+
+                                    ? `<div class="time-slot-name" style="margin-top: 5px; font-style: italic;">Purpose: ${String(reservation.purpose).trim()}</div>` 
+
+                                    : '';
+
+                                
+
                                 return `
 
                                 <div class="time-slot" ${!hasName ? 'style="border-left-color: #ffc107;"' : ''}>
@@ -1071,9 +1121,9 @@
 
                                         </div>
 
-                                        ${reservation.temperature ? `<div class="time-slot-name" style="margin-top: 5px;">Temperature: ${reservation.temperature}</div>` : ''}
+                                        ${temperatureDisplay}
 
-                                        ${reservation.purpose ? `<div class="time-slot-name" style="margin-top: 5px; font-style: italic;">Purpose: ${reservation.purpose}</div>` : ''}
+                                        ${purposeDisplay}
 
                                         ${!hasName ? `<div class="time-slot-name" style="margin-top: 5px; font-size: 0.85em; color: #666;">Reservation ID: ${reservation.id || 'N/A'}</div>` : ''}
 
@@ -1082,8 +1132,6 @@
                                     <div style="display: flex; align-items: center; gap: 10px;">
 
                                         <span class="reserved-badge">Reserved</span>
-
-                                        <button class="btn-cancel-small" onclick="showCancelModal('${reservation.id || ''}', '${reservationName.replace(/'/g, "\\'")}', 'check-availability')" style="padding: 6px 12px; font-size: 0.85em;">Cancel</button>
 
                                     </div>
 
