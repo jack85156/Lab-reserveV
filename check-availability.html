@@ -486,7 +486,7 @@
 
                 if (reservationsToFix.length > 0) {
 
-                    console.warn(`Found ${reservationsToFix.length} reservations without names. These cannot be fixed automatically.`);
+                    // console.warn(`Found ${reservationsToFix.length} reservations without names. These cannot be fixed automatically.`);
 
                     // Note: We can't automatically fix these because we don't know what the name should be
 
@@ -500,7 +500,7 @@
 
             } catch (error) {
 
-                console.error('Error checking for reservations without names:', error);
+                // console.error('Error checking for reservations without names:', error);
 
                 return [];
 
@@ -521,8 +521,8 @@
                 // Decode URL-encoded instrument name and trim whitespace
                 if (instrument) {
                     instrument = decodeURIComponent(instrument).trim();
-                    console.log('Raw instrument from URL:', urlParams.get('instrument'));
-                    console.log('Decoded and trimmed instrument:', instrument);
+                    // console.log('Raw instrument from URL:', urlParams.get('instrument'));
+                    // console.log('Decoded and trimmed instrument:', instrument);
                 }
 
                 
@@ -577,11 +577,11 @@
 
                 const reservations = await Storage.getReservations();
 
-                console.log('All reservations:', reservations);
+                // console.log('All reservations:', reservations);
 
-                console.log('Looking for instrument:', instrument);
+                // console.log('Looking for instrument:', instrument);
 
-                console.log('Instrument type:', typeof instrument, 'Length:', instrument?.length);
+                // console.log('Instrument type:', typeof instrument, 'Length:', instrument?.length);
 
                 
 
@@ -589,9 +589,9 @@
 
                 const allInstrumentNames = [...new Set(reservations.map(r => r.instrument).filter(Boolean))];
 
-                console.log('All instrument names in reservations:', allInstrumentNames);
+                // console.log('All instrument names in reservations:', allInstrumentNames);
 
-                console.log('Instrument name matches:', allInstrumentNames.map(name => ({ name, matches: name === instrument, trimmed: name?.trim() === instrument?.trim() })));
+                // console.log('Instrument name matches:', allInstrumentNames.map(name => ({ name, matches: name === instrument, trimmed: name?.trim() === instrument?.trim() })));
 
                 
 
@@ -599,7 +599,7 @@
 
                 if (!Array.isArray(reservations)) {
 
-                    console.error('Reservations is not an array:', reservations);
+                    // console.error('Reservations is not an array:', reservations);
 
                     throw new Error('Invalid reservations data');
 
@@ -621,23 +621,23 @@
 
                     if (!matches && reservationInstrument && instrumentTrimmed) {
 
-                        // Log near-matches for debugging
+                        // Log near-matches for debugging (hidden)
 
-                        if (reservationInstrument.toLowerCase().includes(instrumentTrimmed.toLowerCase()) || 
+                        // if (reservationInstrument.toLowerCase().includes(instrumentTrimmed.toLowerCase()) || 
 
-                            instrumentTrimmed.toLowerCase().includes(reservationInstrument.toLowerCase())) {
+                        //     instrumentTrimmed.toLowerCase().includes(reservationInstrument.toLowerCase())) {
 
-                            console.warn('Near-match found:', { 
+                        //     console.warn('Near-match found:', { 
 
-                                lookingFor: instrumentTrimmed, 
+                        //         lookingFor: instrumentTrimmed, 
 
-                                found: reservationInstrument,
+                        //         found: reservationInstrument,
 
-                                reservation: r
+                        //         reservation: r
 
-                            });
+                        //     });
 
-                        }
+                        // }
 
                     }
 
@@ -647,17 +647,17 @@
 
                 
 
-                console.log('Filtered reservations for instrument:', instrumentReservations.length, instrumentReservations);
+                // console.log('Filtered reservations for instrument:', instrumentReservations.length, instrumentReservations);
                 
-                // If no reservations found, show diagnostic info
-                if (instrumentReservations.length === 0 && reservations.length > 0) {
-                    console.warn('⚠️ No reservations found for instrument:', instrument);
-                    console.warn('   Available instrument names in database:', allInstrumentNames);
-                    console.warn('   This might indicate a name mismatch. Check:');
-                    console.warn('   1. Instrument name in URL matches exactly with database');
-                    console.warn('   2. No extra whitespace or special characters');
-                    console.warn('   3. Case sensitivity (should match exactly)');
-                }
+                // If no reservations found, show diagnostic info (hidden)
+                // if (instrumentReservations.length === 0 && reservations.length > 0) {
+                //     console.warn('⚠️ No reservations found for instrument:', instrument);
+                //     console.warn('   Available instrument names in database:', allInstrumentNames);
+                //     console.warn('   This might indicate a name mismatch. Check:');
+                //     console.warn('   1. Instrument name in URL matches exactly with database');
+                //     console.warn('   2. No extra whitespace or special characters');
+                //     console.warn('   3. Case sensitivity (should match exactly)');
+                // }
 
                 
 
@@ -741,45 +741,45 @@
 
                 
 
-                console.log('Filtered instrument reservations (excluding expired):', instrumentReservations.length, instrumentReservations);
+                // console.log('Filtered instrument reservations (excluding expired):', instrumentReservations.length, instrumentReservations);
 
                 
 
-                // Debug: Check each reservation's structure
+                // Debug: Check each reservation's structure (hidden)
 
-                instrumentReservations.forEach((r, index) => {
+                // instrumentReservations.forEach((r, index) => {
 
-                    console.log(`Reservation ${index}:`, {
+                //     console.log(`Reservation ${index}:`, {
 
-                        id: r.id,
+                //         id: r.id,
 
-                        instrument: r.instrument,
+                //         instrument: r.instrument,
 
-                        name: r.name,
+                //         name: r.name,
 
-                        nameType: typeof r.name,
+                //         nameType: typeof r.name,
 
-                        date: r.date,
+                //         date: r.date,
 
-                        startTime: r.startTime,
+                //         startTime: r.startTime,
 
-                        endTime: r.endTime,
+                //         endTime: r.endTime,
 
-                        temperature: r.temperature,
+                //         temperature: r.temperature,
 
-                        temperatureType: typeof r.temperature,
+                //         temperatureType: typeof r.temperature,
 
-                        purpose: r.purpose,
+                //         purpose: r.purpose,
 
-                        purposeType: typeof r.purpose,
+                //         purposeType: typeof r.purpose,
 
-                        allKeys: Object.keys(r),
+                //         allKeys: Object.keys(r),
 
-                        rawReservation: r
+                //         rawReservation: r
 
-                    });
+                //     });
 
-                });
+                // });
 
                 
 
@@ -787,11 +787,11 @@
 
                 const reservationsWithoutNames = instrumentReservations.filter(r => !r.name || !r.name.trim());
 
-                if (reservationsWithoutNames.length > 0) {
+                // if (reservationsWithoutNames.length > 0) {
 
-                    console.warn('Found reservations without names:', reservationsWithoutNames);
+                //     console.warn('Found reservations without names:', reservationsWithoutNames);
 
-                }
+                // }
 
                 
 
@@ -809,29 +809,29 @@
 
                     
 
-                    // Show diagnostic info if there are reservations but none match this instrument
+                    // Show diagnostic info if there are reservations but none match this instrument (hidden)
 
                     let diagnosticMessage = '';
 
-                    if (reservations.length > 0) {
+                    // if (reservations.length > 0) {
 
-                        diagnosticMessage = `
+                    //     diagnosticMessage = `
 
-                            <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                    //         <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
 
-                                <strong>🔍 Diagnostic Info:</strong><br>
+                    //             <strong>🔍 Diagnostic Info:</strong><br>
 
-                                Looking for: <code>${instrument}</code><br>
+                    //             Looking for: <code>${instrument}</code><br>
 
-                                Found ${reservations.length} total reservation(s) in database, but none match this instrument name.<br>
+                    //             Found ${reservations.length} total reservation(s) in database, but none match this instrument name.<br>
 
-                                <small style="color: #666;">Check browser console (F12) for detailed instrument names in database.</small>
+                    //             <small style="color: #666;">Check browser console (F12) for detailed instrument names in database.</small>
 
-                            </div>
+                    //         </div>
 
-                        `;
+                    //     `;
 
-                    }
+                    // }
 
                     
 
@@ -907,7 +907,7 @@
 
                 if (!container) {
 
-                    console.error('Availability container not found');
+                    // console.error('Availability container not found');
 
                     throw new Error('Page element not found');
 
@@ -953,7 +953,7 @@
 
                     } catch (error) {
 
-                        console.error('Error formatting date:', error);
+                        // console.error('Error formatting date:', error);
 
                         // Last resort: simple date display
 
@@ -1023,15 +1023,15 @@
 
                             ${dayReservations.map(reservation => {
 
-                                // Debug: Log reservation data
+                                // Debug: Log reservation data (hidden)
 
-                                console.log('Reservation data:', reservation);
+                                // console.log('Reservation data:', reservation);
 
-                                console.log('Reservation name:', reservation.name, 'Type:', typeof reservation.name);
+                                // console.log('Reservation name:', reservation.name, 'Type:', typeof reservation.name);
 
-                                console.log('Reservation temperature:', reservation.temperature, 'Type:', typeof reservation.temperature, 'Has value:', !!reservation.temperature);
+                                // console.log('Reservation temperature:', reservation.temperature, 'Type:', typeof reservation.temperature, 'Has value:', !!reservation.temperature);
 
-                                console.log('All reservation keys:', Object.keys(reservation));
+                                // console.log('All reservation keys:', Object.keys(reservation));
 
                                 
 
@@ -1151,7 +1151,7 @@
 
             } catch (error) {
 
-                console.error('Error loading availability:', error);
+                // console.error('Error loading availability:', error);
 
                 const container = document.getElementById('availability-container');
 
